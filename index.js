@@ -1,12 +1,12 @@
 const dotenv = require("dotenv");
 dotenv.config();
 
+// DB connection
 const mongoose = require("mongoose");
-
 (function connectToDB() {
   try {
-    // mongoose.connect(process.env.MONGODB_URI);
-    mongoose.connect("mongodb://localhost:27017/");
+    // mongoose.connect(process.env.MONGODB_URI); // remote
+    mongoose.connect("mongodb://localhost:27017/nocturama"); // local
 
     console.log("☎️  Connection to database sucessfull");
   } catch (error) {
@@ -14,20 +14,32 @@ const mongoose = require("mongoose");
   }
 })();
 
-const cors = require("cors");
-
+// Imports
+// Modules
 const express = require("express");
+// Middleware
+const cors = require("cors");
 const showReq = require("./middleware/showReq");
+const articleRoutes = require("./routes/article-routes");
 const handleError = require("./middleware/handleError");
 
+const corsOptions = {
+  // origin: process.env.ADMIN_FRONTEND_URL || "http://localhost:5173",
+  // methods: ["GET", "POST", "PUT", "DELETE"],
+  // allowedHeaders: ["Content-Type", "Authorization"],
+  // // credentials: true, // If you're using cookies/sessions
+  // // maxAge: 600, // Cache preflight requests for 10 minutes
+  // optionsSuccessStatus: 200,
+};
+
+// Create server
 const app = express();
-app.use(cors());
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(showReq);
+app.use("/admin", articleRoutes);
 app.use(handleError);
-
-const articleRoutes = require("./routes/article-routes");
-app.use(articleRoutes);
 
 app.all("/{*splat}", (req, res) => {
   console.error("⚠️ Unknown route");

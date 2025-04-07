@@ -1,7 +1,7 @@
 const User = require("../models/User");
 
 async function requireAuth(req, res, then) {
-  console.log("\n⚠️  requireAuth");
+  console.log("\n⚠️  requireAuth...");
 
   if (!req?.headers?.authorization) {
     console.log("Missing token");

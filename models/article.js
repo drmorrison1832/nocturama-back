@@ -1,9 +1,11 @@
 const mongoose = require("mongoose");
 
+mongoose.Schema.Types.String.set("trim", true);
+
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: [true, "Title is required"] },
   author: String,
-  body: { type: String, required: [true, "Body is required"] },
+  description: { type: String, required: [true, "Description is required"] },
   mainImage: String,
   link: String,
   date: { type: Date, default: Date.now },

@@ -1,5 +1,7 @@
 function showReq(req, res, then) {
-  console.log("\n⚠️  ShowReq", req.method + ":", req.url);
+  console.log("\n⚠️  ShowReq...");
+  console.log("Route is:", req.method + ":", req.url);
+  console.log("req is:");
 
   req.headers.authorization &&
     console.log(
@@ -7,11 +9,11 @@ function showReq(req, res, then) {
       req.headers.authorization.replace("Bearer ", "")
     );
 
-  Object.keys(req?.params)?.length && console.log("  Params:", req.params);
-  Object.keys(req?.query)?.length && console.log("  Query:", req.query);
-  Object.keys(req?.body)?.length && console.log("  Body:", req.body);
-  req.files && console.log("  Files:", req.files);
-
+  console.log("  Params:", req?.params);
+  console.log("  Query:", req?.query);
+  console.log("  Body:", req?.body);
+  console.log("  Files:", req?.files);
+  console.log("\n");
   then();
 }
 

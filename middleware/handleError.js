@@ -1,11 +1,43 @@
 function handleJsonError(err, req, res, next) {
-  console.log("\n⚠️  handleError");
+  console.log("\n⚠️  handleError...");
+
   // JSON Parsing errors
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
     console.log("❌ Invalid JSON format in request body");
     return res.status(400).json({
       status: "error",
       message: "Invalid JSON format in request body",
+    });
+  }
+
+  // Sorting errors
+  if (err.message.includes("Invalid sort")) {
+    console.log("❌ Sorting error:", err.message);
+    return res.status(400).json({
+      status: "error",
+      type: "SORT_ERROR",
+      message: err.message,
+    });
+  }
+
+  // Pagination errors
+  if (err.message.includes("Page not found")) {
+    console.log("❌ Pagination error:", err.message);
+    return res.status(404).json({
+      status: "error",
+      type: "PAGINATION_ERROR",
+      message: err.message,
+      pagination: err.pagination,
+    });
+  }
+
+  // Date errors
+  if (err.message.includes("YYYY-MM-DD format")) {
+    console.log("❌ Date format error:", err.message);
+    return res.status(404).json({
+      status: "error",
+      type: "DATE_ERROR",
+      message: err.message,
     });
   }
 
