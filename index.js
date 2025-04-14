@@ -5,8 +5,8 @@ dotenv.config();
 const mongoose = require("mongoose");
 (function connectToDB() {
   try {
-    // mongoose.connect(process.env.MONGODB_URI); // remote
-    mongoose.connect("mongodb://localhost:27017/nocturama"); // local
+    // mongoose.connect(process.env.MONGODB_URI); // Remote
+    mongoose.connect("mongodb://localhost:27017/nocturama"); // Local
 
     console.log("☎️  Connection to database sucessfull");
   } catch (error) {
@@ -14,22 +14,15 @@ const mongoose = require("mongoose");
   }
 })();
 
-// Imports
-// Modules
+// Modules & middleware
 const express = require("express");
-// Middleware
 const cors = require("cors");
 const showReq = require("./middleware/showReq");
 const articleRoutes = require("./routes/article-routes");
 const handleError = require("./middleware/handleError");
 
 const corsOptions = {
-  // origin: process.env.ADMIN_FRONTEND_URL || "http://localhost:5173",
-  // methods: ["GET", "POST", "PUT", "DELETE"],
-  // allowedHeaders: ["Content-Type", "Authorization"],
-  // // credentials: true, // If you're using cookies/sessions
-  // // maxAge: 600, // Cache preflight requests for 10 minutes
-  // optionsSuccessStatus: 200,
+  // Nothing for the moment
 };
 
 // Create server

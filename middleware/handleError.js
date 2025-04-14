@@ -55,10 +55,18 @@ function handleJsonError(err, req, res, next) {
     console.log("❌ Validation failed");
     return res.status(400).json({
       status: "error",
-      message: "Validation failed",
-      details: Object.values(err.errors).map((err) => err.message),
+      message: `Missing or invalid fields: ${Object.keys(err.errors).join(
+        ", "
+      )}`,
     });
   }
+
+  return res.status(400).json({
+    message: `Missing or invalid fields: ${Object.keys(error.errors).join(
+      ", "
+    )}`,
+    errors: Object.values(error.errors).map((err) => err.message),
+  });
 
   // MongoDB Duplicate Key Error
   if (err.code === 11000) {

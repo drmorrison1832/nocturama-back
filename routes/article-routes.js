@@ -2,6 +2,7 @@ const router = require("express").Router();
 
 const Article = require("../models/article");
 const validateEntry = require("../middleware/validateEntry");
+const validateId = require("../middleware/validateId");
 
 const PAGINATION = {
   DEFAULT_LIMIT: 10,
@@ -109,12 +110,30 @@ router.get("/articles", async (req, res, next) => {
   }
 });
 
-router.put("/articles", async (req, res) => {
+router.put("/articles", async (req, res, next) => {
   return res.status(200).json("Something");
 });
 
-router.delete("/articles", async (req, res) => {
-  return res.status(200).json("Something");
+router.delete("/articles/:id", validateId, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const article = await Article.findById(id);
+
+    if (!article) {
+      throw new Error("Article not found");
+    }
+
+    await Article.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      status: "success",
+      message: "Article deleted successfully",
+      data: { id },
+    });
+  } catch {
+    next(error);
+  }
 });
 
 function parsePagination(skip, limit) {
