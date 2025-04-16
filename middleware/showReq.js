@@ -3,16 +3,16 @@ function showReq(req, res, then) {
   console.log("Route is:", req.method + ":", req.url);
   console.log("req is:");
 
-  req.headers.authorization &&
+  req?.headers?.authorization &&
     console.log(
       "  headers.authorization (token):",
       req.headers.authorization.replace("Bearer ", "")
     );
 
-  console.log("  Params:", req?.params);
-  console.log("  Query:", req?.query);
-  console.log("  Body:", req?.body);
-  console.log("  Files:", req?.files);
+  req?.headers?.params && console.log("  params:", req?.params);
+  req?.query && console.log("  query:", req?.query);
+  req?.body && console.log("  body:", req?.body);
+  req?.files && console.log("  files:", req?.files);
   console.log("\n");
   then();
 }

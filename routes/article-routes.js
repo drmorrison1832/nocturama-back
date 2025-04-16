@@ -3,6 +3,7 @@ const router = require("express").Router();
 const Article = require("../models/article");
 const validateEntry = require("../middleware/validateEntry");
 const validateId = require("../middleware/validateId");
+const validateDates = require("../middleware/validateDates");
 
 const PAGINATION = {
   DEFAULT_LIMIT: 10,
@@ -10,11 +11,7 @@ const PAGINATION = {
 };
 
 const SORTING_FIELDS = ["title", "date", "author"];
-
 const SEARCH_FIELDS = ["title", "author", "description"];
-
-// const requireAuth = require("../middleware/requireAuth");
-// router.use(requireAuth); // Ça s'applique à toutes les routes...
 
 router.post("/articles", validateEntry(Article), async (req, res, next) => {
   try {
@@ -27,7 +24,7 @@ router.post("/articles", validateEntry(Article), async (req, res, next) => {
   }
 });
 
-router.get("/articles", async (req, res, next) => {
+router.get("/articles", validateDates, async (req, res, next) => {
   const {
     skip = 0,
     limit = PAGINATION.DEFAULT_LIMIT,
@@ -48,21 +45,10 @@ router.get("/articles", async (req, res, next) => {
   }
 
   if (startDate || endDate) {
-    query.date = {};
-
-    if (startDate) {
-      if (!isValidDate(startDate)) {
-        throw new Error("Start date must be in YYYY-MM-DD format");
-      }
-      query.date.$gte = new Date(startDate);
-    }
-
-    if (endDate) {
-      if (!isValidDate(endDate)) {
-        throw new Error("End date must be in YYYY-MM-DD format");
-      }
-      query.date.$lte = new Date(endDate);
-    }
+    query.date = {
+      $gte: startDate ? new Date(startDate) : null,
+      $lte: endDate ? new Date(endDate) : null,
+    };
   }
 
   const order = {};
@@ -143,22 +129,6 @@ function parsePagination(skip, limit) {
     Math.max(1, Number(limit))
   );
   return { parsedSkip, parsedLimit };
-}
-
-function isValidDate(dateString) {
-  // Check format YYYY-MM-DD
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
-    return false;
-  }
-
-  const date = new Date(dateString);
-
-  // Check if valid date and matches original string when formatted
-  return (
-    date instanceof Date &&
-    !isNaN(date) &&
-    date.toISOString().slice(0, 10) === dateString
-  );
 }
 
 module.exports = router;
