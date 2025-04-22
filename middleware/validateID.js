@@ -7,23 +7,19 @@ function validateID(req, res, next) {
 
   if (mongoose.Types.ObjectId.isValid(id)) {
     console.log("✅ ID validation successful");
-    next();
+    return next();
   }
-
   console.log("❌ Invalid ID format");
 
   const err = new Error("Invalid ID format");
   err.name = "CastError";
-  err.statusCode = 400;
-
-  console.log("❌❌❌❌❌ err.statusCode is", err.statusCode);
-
   err.status = "error";
   err.type = "INVALID_ID";
+  err.statusCode = 400;
   err.message = "Invalid ID format";
   err.details = req?.params?.id || null;
 
-  next(err);
+  return next(err);
 }
 
 module.exports = validateID;

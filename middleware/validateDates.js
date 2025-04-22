@@ -1,4 +1,4 @@
-const isValidDate = require("./isValidDate");
+const isValidDate = require("../utils/isValidDate");
 
 function validateDates(req, res, next) {
   console.log("\n⚠️  validateDates...");
@@ -13,9 +13,9 @@ function validateDates(req, res, next) {
   if (startDate && !isValidDate(startDate)) {
     console.log("❌❌❌❌❌");
     const err = new Error("Invalid start date format");
-    err.statusCode = 400;
     err.status = "error";
     err.type = "DATE_ERROR";
+    err.statusCode = 400;
     err.message = "Wrong date format";
     err.details = "Start date must be in YYYY-MM-DD format";
     return next(err);
@@ -24,9 +24,9 @@ function validateDates(req, res, next) {
   if (endDate && !isValidDate(endDate)) {
     console.log("❌❌❌❌❌");
     const err = new Error("Invalid end date format");
-    err.statusCode = 400;
     err.status = "error";
     err.type = "DATE_ERROR";
+    err.statusCode = 400;
     err.message = "Wrong date format";
     err.details = "End date must be in YYYY-MM-DD format";
     return next(err);
@@ -34,7 +34,6 @@ function validateDates(req, res, next) {
 
   if (startDate && endDate) {
     if (new Date(startDate) > new Date(endDate)) {
-      console.log("❌❌❌❌❌");
       const err = new Error("Invalid date range");
       err.statusCode = 400;
       err.status = "error";

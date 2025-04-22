@@ -30,7 +30,7 @@ const app = express();
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use(showReq);
+// app.use(showReq);
 app.use("/admin", articleRoutes);
 app.use(handleError);
 

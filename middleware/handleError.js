@@ -1,56 +1,72 @@
 function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError...");
 
+  console.log("error name is", err?.name);
+  // console.log("❌❌❌❌ error is");
+  // Object.keys(err).forEach((key) => {
+  //   console.log(key, ":", err[key]);
+  // });
+
   const ERROR_TYPES = {
-    NOT_FOUND: { statusCode: err.statusCode || 404, type: "NOT_FOUND" },
-    SORT: { statusCode: err.statusCode || 400, type: "INVALID_SORT" },
-    DEFAULT: { statusCode: 500, type: "INTERNAL_ERROR" },
+    NOT_FOUND: { statusCode: 404 },
+    BAD_REQUEST: { statusCode: 400 },
+    UNAUTHORIZED: { statusCode: 401 },
+    FORBIDDEN: { statusCode: 403 },
+    CONFLICT: { statusCode: 409 },
+    VALIDATION_ERROR: { statusCode: 422 },
+    INTERNAL_ERROR: { statusCode: 500 },
+    DATABASE_ERROR: { statusCode: 500 },
+    SORT_ERROR: { statusCode: 400 },
   };
 
   const errorResponse = {
-    status: "error",
-    type: ERROR_TYPES.DEFAULT.type,
-    message: "Internal server error",
-    details: null,
+    status: err.status || err.status || "error",
+    type: err.type || "INTERNAL_ERROR",
+    code: err.statusCode || err.code || 500,
+    message: err.message || "Internal server error",
+    details: err.details || null,
   };
 
-  // Mongoose Validation Error
+  // Mongoose Validation Error (DB entry doesn't match schema)
   if (err.name === "ValidationError") {
-    errorResponse.status = err.status;
-    errorResponse.type = err.type;
-    errorResponse.message = err._message;
-    errorResponse.details = err.details;
-    return res.status(err.statusCode).json(errorResponse);
+    // errorResponse.message = err._message;
+    return res.status(errorResponse.code).json(errorResponse);
   }
 
   // Mongoose Cast Error (invalid ID format)
   if (err.name === "CastError") {
-    errorResponse.status = err.status;
-    errorResponse.type = err.type;
-    errorResponse.message = err.message;
-    errorResponse.details = err.details;
-    return res.status(err.statusCode).json(errorResponse);
+    return res.status(errorResponse.code).json(errorResponse);
   }
 
-  // JSON Parsing errors
-  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+  // Mongoose Parse Error (invlalid JSON)
+  if (err instanceof SyntaxError) {
     console.log("❌ Invalid JSON format in request body");
-    errorResponse.status = err.status;
+    errorResponse.status = "error";
     errorResponse.type = "INVALID_JSON";
+    // Details line must be before message line
+    errorResponse.details = err.message;
     errorResponse.message = "Invalid JSON format in request body";
-    errorResponse.details = err?.body;
-    return res.status(err.statusCode).json(errorResponse);
+    return res.status(errorResponse.code).json(errorResponse);
+  }
+
+  // Mongoose Not Found Error
+  if (err.name === "NotFoundError") {
+    return res.status(errorResponse.code).json(errorResponse);
   }
 
   // Sorting errors
   if (err.message.includes("Invalid sort")) {
     console.log("❌ Sorting error:", err.message);
 
-    return res.status(400).json({
-      status: "error",
-      type: "SORT_ERROR",
-      message: err.message,
-    });
+    console.log(errorResponse);
+
+    return res.status(errorResponse.code).json(errorResponse);
+
+    // return res.status(400).json({
+    //   status: "error",
+    //   type: "SORT_ERROR",
+    //   message: err.message,
+    // });
   }
 
   // Pagination errors
@@ -67,11 +83,7 @@ function handleJsonError(err, req, res, next) {
   // Date errors
   if (err.type === "DATE_ERROR") {
     console.log("❌ Date error:", err.message);
-    errorResponse.status = err.status;
-    errorResponse.type = err.type;
-    errorResponse.message = err.message;
-    errorResponse.details = err.details;
-    return res.status(err.statusCode).json(errorResponse);
+    return res.status(errorResponse.code).json(errorResponse);
   }
 
   // MongoDB Duplicate Key Error
