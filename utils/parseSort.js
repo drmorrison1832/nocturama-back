@@ -22,7 +22,7 @@ function parseSort(sort) {
 
     parsedOrder[field] = direction === "desc" ? -1 : 1;
   });
-  console.log(parsedOrder);
+
   return parsedOrder;
 }
 

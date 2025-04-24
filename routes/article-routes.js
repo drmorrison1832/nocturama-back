@@ -1,4 +1,5 @@
-// console.log("👻👻👻");
+// TO DO : add
+
 const router = require("express").Router();
 
 const Article = require("../models/article");
@@ -13,13 +14,14 @@ const SEARCH_FIELDS = [
   "title",
   "author",
   "description",
-  "created",
-  // "updated",
+  "createdStartDate",
+  "createdEndDate",
+  // "updatedStartDate",
+  // "updatedEndDate"
   // "shown",
 ];
 
 router.post("/articles", validateEntry(Article), async (req, res, next) => {
-  console.log("☎️ POST/articles");
   try {
     const newArticle = new Article(req.body);
     const response = await newArticle.save();
@@ -35,7 +37,6 @@ router.put(
   validateResourceExists(Article),
   validateEntry(Article),
   async (req, res, next) => {
-    console.log("☎️ PUT/articles/" + req.params.id);
     try {
       const existingArticle = await Article.findById(req.params.id);
       if (!existingArticle) {
@@ -68,14 +69,15 @@ router.put(
 );
 
 router.get("/articles", validateDates, async (req, res, next) => {
-  console.log("☎️ GET/articles/" + JSON.stringify(req?.query));
   const {
     skip = 0,
     limit,
     sort,
     search,
-    startDate,
-    endDate,
+    createdStartDate,
+    createdEndDate,
+    updatedStartDate,
+    updatedEndDate,
     shown,
   } = req.query;
 
@@ -91,19 +93,17 @@ router.get("/articles", validateDates, async (req, res, next) => {
     }));
   }
 
-  if (startDate) {
+  if (createdStartDate) {
     query.created = {
-      $gte: startDate && new Date(startDate),
+      $gte: new Date(createdStartDate),
     };
   }
 
-  if (endDate) {
+  if (createdEndDate) {
     query.created = {
-      $lte: endDate && new Date(endDate),
+      $lte: new Date(createdEndDate),
     };
   }
-
-  console.log("query is", query);
 
   try {
     const [articles, total] = await Promise.all([
@@ -142,7 +142,6 @@ router.delete(
   "/articles/:id",
   validateResourceExists(Article),
   async (req, res, next) => {
-    console.log("☎️ DELETE/articles/" + req.params.id);
     try {
       const { id } = req.params;
 
