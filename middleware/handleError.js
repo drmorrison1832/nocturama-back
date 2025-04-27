@@ -41,11 +41,12 @@ function handleJsonError(err, req, res, next) {
   // Mongoose Parse Error (invlalid JSON)
   if (err instanceof SyntaxError) {
     console.log("❌ Invalid JSON format in request body");
+    const details = err.message; // MongoDB creates this key automatically
+
     errorResponse.status = "error";
     errorResponse.type = "INVALID_JSON";
-    // Details line must be before message line
-    errorResponse.details = err.message;
     errorResponse.message = "Invalid JSON format in request body";
+    errorResponse.details = details;
     return res.status(errorResponse.code).json(errorResponse);
   }
 
@@ -60,13 +61,13 @@ function handleJsonError(err, req, res, next) {
 
     console.log(errorResponse);
 
-    return res.status(errorResponse.code).json(errorResponse);
+    // return res.status(errorResponse.code).json(errorResponse);
 
-    // return res.status(400).json({
-    //   status: "error",
-    //   type: "SORT_ERROR",
-    //   message: err.message,
-    // });
+    return res.status(400).json({
+      status: "error",
+      type: "SORT_ERROR",
+      message: err.message,
+    });
   }
 
   // Pagination errors

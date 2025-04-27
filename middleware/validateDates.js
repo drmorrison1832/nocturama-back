@@ -19,9 +19,13 @@ function validateDates(req, res, next) {
   };
 
   Object.keys(datesToValidate).forEach((date) => {
+    if (!datesToValidate[date]) {
+      return delete datesToValidate[date]; // MongoDB will throu error if date is undefined
+    }
+
     if (!isValidDate(datesToValidate[date])) {
-      console.log("❌❌❌❌❌");
-      const err = new Error("Invalid date format");
+      console.log("❌❌❌❌❌", datesToValidate[date]);
+      const err = new Error("Invalid date format: ", datesToValidate[date]);
       err.status = "error";
       err.type = "DATE_ERROR";
       err.statusCode = 400;

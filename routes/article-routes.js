@@ -16,9 +16,8 @@ const SEARCH_FIELDS = [
   "description",
   "createdStartDate",
   "createdEndDate",
-  // "updatedStartDate",
-  // "updatedEndDate"
-  // "shown",
+  "updatedStartDate",
+  "updatedEndDate",
 ];
 
 router.post("/articles", validateEntry(Article), async (req, res, next) => {
@@ -93,16 +92,35 @@ router.get("/articles", validateDates, async (req, res, next) => {
     }));
   }
 
-  if (createdStartDate) {
-    query.created = {
-      $gte: new Date(createdStartDate),
-    };
-  }
+  query.created = {
+    ...(createdStartDate && { $gte: new Date(createdStartDate) }),
+    ...(createdEndDate && { $lte: new Date(createdEndDate) }),
+    ...(updatedStartDate && { $gte: new Date(updatedStartDate) }),
+    ...(updatedEndDate && { $lte: new Date(updatedEndDate) }),
+  };
 
-  if (createdEndDate) {
-    query.created = {
-      $lte: new Date(createdEndDate),
-    };
+  // if (shown) {
+  //   query.shown = shown;
+  // }
+
+  console.log("shown type is", typeof shown);
+  console.log("shown is", shown);
+  switch (shown) {
+    case undefined:
+      console.log("0");
+      break;
+    case "true":
+      console.log("1");
+      query.shown = true;
+      break;
+    case "false":
+      console.log("2");
+      query.shown = false;
+      break;
+    default:
+      console.log("3");
+      throw new Error(`show must be "true" or "false"`);
+      break;
   }
 
   try {
