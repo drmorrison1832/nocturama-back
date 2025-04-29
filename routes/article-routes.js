@@ -3,6 +3,7 @@
 const router = require("express").Router();
 
 const Article = require("../models/article");
+const validateID = require("../middleware/validateID");
 const validateEntry = require("../middleware/validateEntry");
 const validateResourceExists = require("../middleware/validateResourceExists");
 const validateDates = require("../middleware/validateDates");
@@ -150,6 +151,7 @@ router.get("/articles", validateDates, async (req, res, next) => {
 
 router.delete(
   "/articles/:id",
+  validateID,
   validateResourceExists(Article),
   async (req, res, next) => {
     try {

@@ -2,11 +2,6 @@ function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError...");
   console.log("error name is", err.name);
 
-  // console.log("error keys are", Object.keys(err));
-  // Object.keys(err).forEach((key) => {
-  //   console.log("❌ ", key, ":", err[key]);
-  // });
-
   const errorResponse = {
     status: err.status || "error",
     type: err.type || "INTERNAL_SERVER_ERROR",

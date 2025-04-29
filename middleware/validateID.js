@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+const { AppError, ValidationError } = require("../utils/customErrors");
+
 function validateID(req, res, next) {
   console.log("\n⚠️  validateID...");
 
@@ -11,15 +13,20 @@ function validateID(req, res, next) {
   }
   console.log("❌ Invalid ID format");
 
-  const err = new Error("Invalid ID format");
-  err.name = "CastError";
-  err.status = "error";
-  err.type = "INVALID_ID";
-  err.statusCode = 400;
-  err.message = "Invalid ID format";
-  err.details = req?.params?.id || null;
+  const error = new AppError({
+    message: "Invalid ID format",
+    name: "CastError",
+    code: 400,
+    type: "INVALID_ID",
+    details: {
+      providedId: req.params.id,
+      expectedFormat: "MongoDB ObjectId (24 characters hexadecimal)",
+    },
+  });
 
-  return next(err);
+  error.log();
+
+  return next(error);
 }
 
 module.exports = validateID;
