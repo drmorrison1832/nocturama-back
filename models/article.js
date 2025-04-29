@@ -10,7 +10,7 @@ const articleSchema = new mongoose.Schema({
   link: String,
   created: { type: Date, default: () => Date.now() },
   updated: [Date],
-  shown: { type: Boolean, default: true },
+  show: { type: Boolean, default: true },
   tags: [{ type: String, lowercase: true }],
 });
 

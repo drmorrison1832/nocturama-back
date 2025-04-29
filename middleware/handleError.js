@@ -1,35 +1,24 @@
 function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError...");
+  console.log("error name is", err.name);
 
-  console.log("error name is", err?.name);
-  // console.log("❌❌❌❌ error is");
+  // console.log("error keys are", Object.keys(err));
   // Object.keys(err).forEach((key) => {
-  //   console.log(key, ":", err[key]);
+  //   console.log("❌ ", key, ":", err[key]);
   // });
 
-  const ERROR_TYPES = {
-    NOT_FOUND: { statusCode: 404 },
-    BAD_REQUEST: { statusCode: 400 },
-    UNAUTHORIZED: { statusCode: 401 },
-    FORBIDDEN: { statusCode: 403 },
-    CONFLICT: { statusCode: 409 },
-    VALIDATION_ERROR: { statusCode: 422 },
-    INTERNAL_ERROR: { statusCode: 500 },
-    DATABASE_ERROR: { statusCode: 500 },
-    SORT_ERROR: { statusCode: 400 },
-  };
-
   const errorResponse = {
-    status: err.status || err.status || "error",
-    type: err.type || "INTERNAL_ERROR",
+    status: err.status || "error",
+    type: err.type || "INTERNAL_SERVER_ERROR",
     code: err.statusCode || err.code || 500,
-    message: err.message || "Internal server error",
+    message:
+      err.message ||
+      "The server was unable to complete your request. Please try again later.",
     details: err.details || null,
   };
 
   // Mongoose Validation Error (DB entry doesn't match schema)
-  if (err.name === "ValidationError") {
-    // errorResponse.message = err._message;
+  if (err.name === "validationError") {
     return res.status(errorResponse.code).json(errorResponse);
   }
 
@@ -87,6 +76,11 @@ function handleJsonError(err, req, res, next) {
     return res.status(errorResponse.code).json(errorResponse);
   }
 
+  if (err.type === "INVALID_QUERY_PARAM") {
+    console.log("❌ Query error:", err.message);
+    return res.status(errorResponse.code).json(errorResponse);
+  }
+
   // MongoDB Duplicate Key Error
   if (err.code === 11000) {
     console.log("❌ Duplicate key error");
@@ -98,11 +92,8 @@ function handleJsonError(err, req, res, next) {
   }
 
   // Default for unhandled errors
-  console.log("❌ Internal server error:", err);
-  return res.status(500).json({
-    status: "error",
-    message: "Internal server error",
-  });
+  console.log("❌ Unknown error:", err);
+  return res.status(errorResponse.code).json(errorResponse);
 
   return res.status(400).json({
     message: `Missing or invalid fields: ${Object.keys(error.errors).join(

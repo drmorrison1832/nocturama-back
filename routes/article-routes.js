@@ -8,8 +8,9 @@ const validateResourceExists = require("../middleware/validateResourceExists");
 const validateDates = require("../middleware/validateDates");
 
 const parsePagination = require("../utils/parsePagination");
-
 const parseSort = require("../utils/parseSort");
+const parseShow = require("../utils/parseShow");
+
 const SEARCH_FIELDS = [
   "title",
   "author",
@@ -25,7 +26,11 @@ router.post("/articles", validateEntry(Article), async (req, res, next) => {
     const newArticle = new Article(req.body);
     const response = await newArticle.save();
 
-    return res.status(200).json(response);
+    return res.status(201).json({
+      status: "success",
+      message: "Article created successfully",
+      data: response,
+    });
   } catch (error) {
     return next(error);
   }
@@ -37,10 +42,10 @@ router.put(
   validateEntry(Article),
   async (req, res, next) => {
     try {
-      const existingArticle = await Article.findById(req.params.id);
-      if (!existingArticle) {
-        return res.status(404).json({ message: "Article not found" });
-      }
+      // const existingArticle = await Article.findById(req.params.id);
+      // if (!existingArticle) {
+      //   return res.status(404).json({ message: "Article not found" });
+      // }
 
       const replacementArticle = req.body;
 
@@ -68,62 +73,49 @@ router.put(
 );
 
 router.get("/articles", validateDates, async (req, res, next) => {
-  const {
-    skip = 0,
-    limit,
-    sort,
-    search,
-    createdStartDate,
-    createdEndDate,
-    updatedStartDate,
-    updatedEndDate,
-    shown,
-  } = req.query;
-
-  const { parsedSkip, parsedLimit } = parsePagination(skip, limit);
-
-  const parsedOrder = sort ? parseSort(sort) : {};
-
-  const query = {};
-
-  if (search) {
-    query.$or = SEARCH_FIELDS.map((field) => ({
-      [field]: { $regex: search, $options: "i" },
-    }));
-  }
-
-  query.created = {
-    ...(createdStartDate && { $gte: new Date(createdStartDate) }),
-    ...(createdEndDate && { $lte: new Date(createdEndDate) }),
-    ...(updatedStartDate && { $gte: new Date(updatedStartDate) }),
-    ...(updatedEndDate && { $lte: new Date(updatedEndDate) }),
-  };
-
-  // if (shown) {
-  //   query.shown = shown;
-  // }
-
-  console.log("shown type is", typeof shown);
-  console.log("shown is", shown);
-  switch (shown) {
-    case undefined:
-      console.log("0");
-      break;
-    case "true":
-      console.log("1");
-      query.shown = true;
-      break;
-    case "false":
-      console.log("2");
-      query.shown = false;
-      break;
-    default:
-      console.log("3");
-      throw new Error(`show must be "true" or "false"`);
-      break;
-  }
-
   try {
+    const {
+      skip = 0,
+      limit,
+      sort,
+      search,
+      createdStartDate,
+      createdEndDate,
+      updatedStartDate,
+      updatedEndDate,
+      show,
+    } = req.query;
+
+    const { parsedSkip, parsedLimit } = parsePagination(skip, limit);
+
+    const parsedOrder = sort ? parseSort(sort) : {};
+
+    const query = {};
+
+    if (search) {
+      query.$or = SEARCH_FIELDS.map((field) => ({
+        [field]: { $regex: search, $options: "i" },
+      }));
+    }
+
+    if (
+      createdStartDate ||
+      createdEndDate ||
+      updatedStartDate ||
+      updatedEndDate
+    ) {
+      query.created = {
+        ...(createdStartDate && { $gte: new Date(createdStartDate) }),
+        ...(createdEndDate && { $lte: new Date(createdEndDate) }),
+        ...(updatedStartDate && { $gte: new Date(updatedStartDate) }),
+        ...(updatedEndDate && { $lte: new Date(updatedEndDate) }),
+      };
+    }
+
+    if (show) {
+      query.show = parseShow(show);
+    }
+
     const [articles, total] = await Promise.all([
       Article.find(query).sort(parsedOrder).skip(parsedSkip).limit(parsedLimit),
       Article.countDocuments(query),
@@ -143,13 +135,13 @@ router.get("/articles", validateDates, async (req, res, next) => {
     }
 
     return res.status(200).json({
-      articles,
       pagination: {
         total,
         skip: parsedSkip,
         limit: parsedLimit,
         hasMore: total > parsedSkip + parsedLimit,
       },
+      articles,
     });
   } catch (error) {
     return next(error);
@@ -162,21 +154,17 @@ router.delete(
   async (req, res, next) => {
     try {
       const { id } = req.params;
-
-      const article = await Article.findById(id);
-
-      if (!article) {
-        throw new Error("Article not found");
-      }
-
-      await Article.findByIdAndDelete(id);
+      const deletedArticle = await Article.findByIdAndDelete(id);
 
       return res.status(200).json({
         status: "success",
         message: "Article deleted successfully",
-        data: { id },
+        data: {
+          id: deletedArticle._id,
+          title: deletedArticle.title,
+        },
       });
-    } catch {
+    } catch (error) {
       return next(error);
     }
   }
