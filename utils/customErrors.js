@@ -16,6 +16,18 @@ class AppError extends Error {
   }
 }
 
+class JSONParseError extends AppError {
+  constructor(MongoDbSyntaxError) {
+    super({
+      name: MongoDbSyntaxError.name,
+      message: "Invalid JSON format in request body",
+      code: 400,
+      type: "BAD_REQUEST",
+      details: MongoDbSyntaxError.message,
+    });
+  }
+}
+
 class ValidationError extends AppError {
   constructor(MongoDbValidationError) {
     super({
@@ -32,4 +44,4 @@ class ValidationError extends AppError {
   }
 }
 
-module.exports = { AppError, ValidationError };
+module.exports = { AppError, ValidationError, JSONParseError };

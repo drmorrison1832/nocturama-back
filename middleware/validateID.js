@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const { AppError, ValidationError } = require("../utils/customErrors");
+const { AppError } = require("../utils/customErrors");
 
 function validateID(req, res, next) {
   console.log("\n⚠️  validateID...");

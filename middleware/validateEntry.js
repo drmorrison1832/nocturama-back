@@ -1,4 +1,4 @@
-const { AppError, ValidationError } = require("../utils/customErrors");
+const { ValidationError } = require("../utils/customErrors");
 
 function validateEntry(Model) {
   return async (req, res, next) => {

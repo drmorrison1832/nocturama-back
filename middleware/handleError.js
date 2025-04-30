@@ -1,7 +1,19 @@
+const { AppError, JSONParseError } = require("../utils/customErrors");
+
 function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError...");
   console.log("error name is", err.name);
 
+  // Convert mongoDB native error objects into custom AppError
+  if (err instanceof SyntaxError) {
+    const customError = new JSONParseError(err);
+    delete err.message; // For some reason the JSONParseError constructor won't overwrite err.message
+    Object.setPrototypeOf(err, customError); // Change err class
+    Object.assign(err, customError);
+    err.log();
+  }
+
+  // Build response object
   const errorResponse = {
     status: err.status || "error",
     type: err.type || "INTERNAL_SERVER_ERROR",
@@ -12,25 +24,11 @@ function handleJsonError(err, req, res, next) {
     details: err.details || null,
   };
 
-  // Mongoose Validation Error (DB entry doesn't match schema)
-  if (err.name === "validationError") {
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  // Mongoose Cast Error (invalid ID format)
-  if (err.name === "CastError") {
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  // Mongoose Parse Error (invlalid JSON)
-  if (err instanceof SyntaxError) {
-    console.log("❌ Invalid JSON format in request body");
-    const details = err.message; // MongoDB creates this key automatically
-
-    errorResponse.status = "error";
-    errorResponse.type = "INVALID_JSON";
-    errorResponse.message = "Invalid JSON format in request body";
-    errorResponse.details = details;
+  if (
+    err.name === "validationError" ||
+    err.name === "CastError" ||
+    err.name === "SyntaxError"
+  ) {
     return res.status(errorResponse.code).json(errorResponse);
   }
 
