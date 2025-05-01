@@ -10,7 +10,6 @@ function validateEntry(Model) {
       return next();
     } catch (error) {
       console.log("❌ Validation failed");
-      // console.log("❌ error is", error);
 
       const err = new ValidationError(error);
       err.log();

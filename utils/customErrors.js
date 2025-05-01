@@ -31,7 +31,7 @@ class JSONParseError extends AppError {
 class ValidationError extends AppError {
   constructor(MongoDbValidationError) {
     super({
-      name: "validationError",
+      name: "ValidationError",
       message: MongoDbValidationError._message,
       code: 422,
       type: "VALIDATION_ERROR",

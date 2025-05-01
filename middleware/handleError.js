@@ -6,28 +6,34 @@ function handleJsonError(err, req, res, next) {
 
   // Convert mongoDB native error objects into custom AppError
   if (err instanceof SyntaxError) {
-    const customError = new JSONParseError(err);
-    delete err.message; // For some reason the JSONParseError constructor won't overwrite err.message
-    Object.setPrototypeOf(err, customError); // Change err class
-    Object.assign(err, customError);
-    err.log();
+    var validationError = new JSONParseError(err);
+    validationError.log();
   }
 
-  // Build response object
-  const errorResponse = {
-    status: err.status || "error",
-    type: err.type || "INTERNAL_SERVER_ERROR",
-    code: err.statusCode || err.code || 500,
-    message:
-      err.message ||
-      "The server was unable to complete your request. Please try again later.",
-    details: err.details || null,
-  };
+  var errorResponse = {};
+  function buildErrorResponse(error) {
+    errorResponse = {
+      status: error.status || "error",
+      type: error.type || "INTERNAL_SERVER_ERROR",
+      code: error.statusCode || error.code || 500,
+      message:
+        error.message ||
+        "The server was unable to complete your request. Please try again later.",
+      details: error.details || null,
+    };
+  }
+
+  if (err) {
+    buildErrorResponse(err);
+  }
+  if (validationError) {
+    buildErrorResponse(validationError);
+  }
 
   if (
-    err.name === "validationError" ||
+    err.name === "ValidationError" ||
     err.name === "CastError" ||
-    err.name === "SyntaxError"
+    validationError
   ) {
     return res.status(errorResponse.code).json(errorResponse);
   }
