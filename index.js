@@ -17,6 +17,7 @@ const mongoose = require("mongoose");
 // Modules & middleware
 const express = require("express");
 const cors = require("cors");
+const parseJSON = require("./utils/parseJSON");
 const showReq = require("./middleware/showReq");
 const articleRoutes = require("./routes/article-routes");
 const handleError = require("./middleware/handleError");
@@ -29,7 +30,7 @@ const corsOptions = {
 const app = express();
 
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ verify: parseJSON }));
 app.use(showReq);
 app.use("/admin", articleRoutes);
 app.use(handleError);

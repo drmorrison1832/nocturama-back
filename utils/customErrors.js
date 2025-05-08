@@ -9,7 +9,7 @@ class AppError extends Error {
   }
 
   log() {
-    console.log("");
+    console.log("Error log:");
     console.log("❌ Error:", this.message);
     Object.keys(this).forEach((key) => console.log("❌", key, ":", this[key]));
     console.log("");
@@ -22,7 +22,7 @@ class JSONParseError extends AppError {
       name: MongoDbSyntaxError.name,
       message: "Invalid JSON format in request body",
       code: 400,
-      type: "BAD_REQUEST",
+      type: "INVALID_JSON", // or should it be "BAD_REQUEST"?
       details: MongoDbSyntaxError.message,
     });
   }

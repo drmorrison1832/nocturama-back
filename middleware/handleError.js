@@ -1,19 +1,10 @@
-const { AppError, JSONParseError } = require("../utils/customErrors");
-
 function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError...");
   console.log("error name is", err.name);
 
-  // Convert mongoDB native error objects into custom AppError
-  if (err instanceof SyntaxError) {
-    var validationError = new JSONParseError(err);
-    validationError.log();
-  }
-
-  var errorResponse = {};
   function buildErrorResponse(error) {
-    errorResponse = {
-      status: error.status || "error",
+    return {
+      status: "error",
       type: error.type || "INTERNAL_SERVER_ERROR",
       code: error.statusCode || error.code || 500,
       message:
@@ -23,18 +14,14 @@ function handleJsonError(err, req, res, next) {
     };
   }
 
-  if (err) {
-    buildErrorResponse(err);
-  }
-  if (validationError) {
-    buildErrorResponse(validationError);
+  const errorResponse = buildErrorResponse(err);
+
+  if (err.name === "ValidationError" || err.name === "CastError") {
+    return res.status(errorResponse.code).json(errorResponse);
   }
 
-  if (
-    err.name === "ValidationError" ||
-    err.name === "CastError" ||
-    validationError
-  ) {
+  if (err.name === "SyntaxError") {
+    errorResponse.code = 400;
     return res.status(errorResponse.code).json(errorResponse);
   }
 
@@ -46,8 +33,6 @@ function handleJsonError(err, req, res, next) {
   // Sorting errors
   if (err.message.includes("Invalid sort")) {
     console.log("❌ Sorting error:", err.message);
-
-    console.log(errorResponse);
 
     // return res.status(errorResponse.code).json(errorResponse);
 

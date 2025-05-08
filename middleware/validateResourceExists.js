@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { AppError } = require("../utils/customErrors");
 
 function validateResourceExists(Model) {
   return async (req, res, next) => {
@@ -6,32 +7,22 @@ function validateResourceExists(Model) {
     try {
       const { id } = req.params;
 
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        const error = new Error("Invalid ID format");
-        error.name = "CastError";
-        error.message = "Invalid ID format";
-        error.status = "error";
-        error.code = 400;
-        error.type = "INVALID_ID";
-        error.details = req?.params?.id || null;
-
-        throw error;
-      }
-
       const exists = await Model.exists({ _id: id });
 
       if (!exists) {
         console.log("❌ Resource not found");
-        const error = new Error("❌ Resource not found");
-        error.name = "NotFoundError";
-        error.message = "Resource not found";
-        error.status = "error";
-        error.code = 404;
-        error.type = "NOT_FOUND";
-        error.details = `Ressource not found ${Object.keys(Model)[0]} with ID ${
-          req.params.id
-        }`;
 
+        const error = new AppError({
+          message: "Resource not found",
+          name: "NotFoundError",
+          code: 404,
+          type: "NOT_FOUND",
+          details: `Resource not found ${Object.keys(Model)[0]} with ID ${
+            req.params.id
+          }`,
+        });
+
+        error.log();
         throw error;
       }
       console.log("✅ ID validation successful");
