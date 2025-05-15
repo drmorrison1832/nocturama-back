@@ -1,3 +1,5 @@
+const { AppError } = require("../utils/customErrors");
+
 const SORTING_FIELDS = ["title", "author", "created"];
 
 const parsedOrder = {};
@@ -8,15 +10,25 @@ function parseSort(sort) {
 
     // Validate sorting criterium
     if (!SORTING_FIELDS.includes(field)) {
-      const error = new Error(`Invalid sort field: ${field}`);
-      error.type = "INVALID_SORT_CRITERION";
-      error.code = 400;
+      const error = new AppError({
+        message: "Invalid request",
+        name: "BadRequestError",
+        code: 400,
+        type: "INVALID_SORT_FIELD",
+        details: `Invalid sort field: ${field}`,
+      });
+
       throw error;
     }
     if (direction && !["asc", "desc"].includes(direction)) {
-      const error = new Error(`Invalid sort direction: ${direction}`);
-      error.type = "INVALID_SORT_DIRECTION";
-      error.code = 400;
+      const error = new AppError({
+        message: "Invalid request",
+        name: "BadRequestError",
+        code: 400,
+        type: "INVALID_SORT_DIRECTION",
+        details: `Invalid sort field value for ${field}: ${direction}`,
+      });
+
       throw error;
     }
 

@@ -9,7 +9,6 @@ class AppError extends Error {
   }
 
   log() {
-    console.log("Error log:");
     console.log("❌ Error:", this.message);
     Object.keys(this).forEach((key) => console.log("❌", key, ":", this[key]));
     console.log("");

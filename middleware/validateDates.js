@@ -1,3 +1,4 @@
+const { AppError } = require("../utils/customErrors");
 const isValidDate = require("../utils/isValidDate");
 
 function validateDates(req, res, next) {
@@ -20,18 +21,20 @@ function validateDates(req, res, next) {
 
   Object.keys(datesToValidate).forEach((date) => {
     if (!datesToValidate[date]) {
-      return delete datesToValidate[date]; // MongoDB will throu error if date is undefined
+      return delete datesToValidate[date]; // MongoDB will throw error if date is undefined
     }
 
     if (!isValidDate(datesToValidate[date])) {
-      console.log("❌❌❌❌❌", datesToValidate[date]);
-      const err = new Error("Invalid date format: ", datesToValidate[date]);
-      err.status = "error";
-      err.type = "DATE_ERROR";
-      err.statusCode = 400;
-      err.message = "Wrong date format";
-      err.details = `${date}: date must be in YYYY-MM-DD format`;
-      throw err;
+      console.log("❌ Invalid date format:", datesToValidate[date]);
+      const error = new AppError({
+        message: "Invalid date format",
+        name: "BadRequestError",
+        code: 400,
+        type: "INVALID_QUERY_PARAM",
+        details: `Wrong date format: ${datesToValidate[date]}. Date must be in YYYY-MM-DD format`,
+      });
+
+      throw error;
     }
   });
 
@@ -50,18 +53,19 @@ module.exports = validateDates;
 
 function validatePeriod(startDate, endDate) {
   if (startDate && endDate) {
-    console.log("validate dates order:", startDate, endDate);
-
     if (new Date(startDate) > new Date(endDate)) {
-      const err = new Error("Invalid date range");
-      err.statusCode = 400;
-      err.status = "error";
-      err.type = "DATE_ERROR";
-      err.message = "Wrong date range";
-      err.details =
-        "Creation and update dates: end date can't be smaller than start date";
-      throw err;
+      const error = new AppError({
+        message: "Invalid dates range",
+        name: "BadRequestError",
+        code: 400,
+        type: "INVALID_QUERY_PARAM",
+        details:
+          "Creation and update dates: end date must be later than start date",
+      });
+
+      throw error;
     }
+
     console.log("OK");
   }
 }

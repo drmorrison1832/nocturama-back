@@ -11,8 +11,8 @@ function validateID(req, res, next) {
     console.log("✅ ID validation successful");
     return next();
   }
-  console.log("❌ Invalid ID format");
 
+  console.log("❌ Invalid ID format");
   const error = new AppError({
     message: "Invalid ID format",
     name: "CastError",
@@ -23,8 +23,6 @@ function validateID(req, res, next) {
       expectedFormat: "MongoDB ObjectId (24 characters hexadecimal)",
     },
   });
-
-  error.log();
 
   return next(error);
 }

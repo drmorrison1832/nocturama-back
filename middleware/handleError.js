@@ -1,6 +1,5 @@
 function handleJsonError(err, req, res, next) {
-  console.log("\n⚠️  handleError...");
-  console.log("error name is", err.name);
+  console.log("\n⚠️  handleError:", err.name);
 
   function buildErrorResponse(error) {
     return {
@@ -16,75 +15,31 @@ function handleJsonError(err, req, res, next) {
 
   const errorResponse = buildErrorResponse(err);
 
-  if (err.name === "ValidationError" || err.name === "CastError") {
-    return res.status(errorResponse.code).json(errorResponse);
+  switch (err.name) {
+    case "ValidationError": // from validateEntry.js
+    case "CastError": // from validateID.js
+    case "NotFoundError": // from validateResourceExists.js
+    case "BadRequestError": // from validateDates.js, parseShow.js, parseSort.js,
+      err.log();
+      return res.status(errorResponse.code).json(errorResponse);
+    case "SyntaxError": // from parseJSON.js
+      errorResponse.code = 400; // For some reason, parseJSON.js won't change errorResponse.code.
+      err.log();
+      return res.status(errorResponse.code).json(errorResponse);
+    default:
+      console.log("❌ Default error");
+      return res.status(errorResponse.code).json(errorResponse);
   }
-
-  if (err.name === "SyntaxError") {
-    errorResponse.code = 400;
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  // Mongoose Not Found Error
-  if (err.name === "NotFoundError") {
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  // Sorting errors
-  if (err.message.includes("Invalid sort")) {
-    console.log("❌ Sorting error:", err.message);
-
-    // return res.status(errorResponse.code).json(errorResponse);
-
-    return res.status(400).json({
-      status: "error",
-      type: "SORT_ERROR",
-      message: err.message,
-    });
-  }
-
-  // Pagination errors
-  if (err.message.includes("Page not found")) {
-    console.log("❌ Pagination error:", err.message);
-    return res.status(404).json({
-      status: "error",
-      type: "PAGINATION_ERROR",
-      message: err.message,
-      pagination: err.pagination,
-    });
-  }
-
-  // Date errors
-  if (err.type === "DATE_ERROR") {
-    console.log("❌ Date error:", err.message);
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  if (err.type === "INVALID_QUERY_PARAM") {
-    console.log("❌ Query error:", err.message);
-    return res.status(errorResponse.code).json(errorResponse);
-  }
-
-  // MongoDB Duplicate Key Error
-  if (err.code === 11000) {
-    console.log("❌ Duplicate key error");
-    return res.status(409).json({
-      status: "error",
-      message: "Duplicate key error",
-      field: Object.keys(err.keyPattern)[0],
-    });
-  }
-
-  // Default for unhandled errors
-  console.log("❌ Unknown error:", err);
-  return res.status(errorResponse.code).json(errorResponse);
-
-  return res.status(400).json({
-    message: `Missing or invalid fields: ${Object.keys(error.errors).join(
-      ", "
-    )}`,
-    errors: Object.values(error.errors).map((err) => err.message),
-  });
 }
 
 module.exports = handleJsonError;
+
+//  MongoDB Duplicate Key Error
+//  if (err.code === 11000) {
+//   console.log("❌ Duplicate key error");
+//   return res.status(409).json({
+//     status: "error",
+//     message: "Duplicate key error",
+//     field: Object.keys(err.keyPattern)[0],
+//   });
+// }

@@ -1,4 +1,3 @@
-const mongoose = require("mongoose");
 const { AppError } = require("../utils/customErrors");
 
 function validateResourceExists(Model) {

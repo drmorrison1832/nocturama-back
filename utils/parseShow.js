@@ -1,3 +1,5 @@
+const { AppError } = require("../utils/customErrors");
+
 function parseShow(show) {
   switch (show) {
     case "true":
@@ -5,13 +7,15 @@ function parseShow(show) {
     case "false":
       return false;
     default:
-      const err = new Error();
-      err.status = "error";
-      err.type = "INVALID_QUERY_PARAM";
-      err.code = 400;
-      err.message = "Invalid show parameter value";
-      err.details = `Show must be true, false or undefined. Received: ${show}`;
-      throw err;
+      const error = new AppError({
+        message: "Invalid query parameter",
+        name: "BadRequestError",
+        code: 400,
+        type: "INVALID_QUERY_PARAM",
+        details: `Show must be true, false or undefined. Received: ${show}`,
+      });
+
+      throw error;
   }
 }
 

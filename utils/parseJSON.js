@@ -1,4 +1,4 @@
-const { AppError, JSONParseError } = require("./customErrors");
+const { JSONParseError } = require("./customErrors");
 
 function parseJSON(req, res, buf) {
   console.log("\n⚠️  parseJSON...");
