@@ -1,69 +1,107 @@
-const express = require("express");
-const router = express.Router();
+const router = require("express").Router();
 
-const { v4: uuidv4 } = require("uuid");
+const { AppError, ValidationError } = require("../utils/customErrors");
+
+const Article = require("../models/article-model");
+const User = require("../models/user-model");
+
+const {
+  validatePassword,
+  validateEmail,
+} = require("../middleware/validators-index");
+
+const { randomUUID } = require("crypto");
+// const { v4: uuidv4 } = require("uuid");
+
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 
-const User = require("../models/User");
+router.post(
+  "/signup",
+  validateEmail,
+  validatePassword,
+  async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
 
-router.post("/user/signup", async (req, res) => {
-  console.log(`🔹 Requested route: user/signup`);
-  try {
-    const userQuery = await User.findOne({ username: req.body.username });
-    if (userQuery) {
-      return res.status(400).json({ message: "Username already registered" });
+      const salt = randomUUID();
+      const hash = SHA256(password + salt).toString(encBase64);
+      const token = randomUUID();
+
+      const newUser = new User({ email, salt, hash, token });
+      await newUser.save();
+
+      return res.status(201).json({
+        status: "success",
+        message: "User created successfully",
+        data: {
+          email: newUser.email,
+          token: newUser.token,
+        },
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyPattern)[0];
+
+        return next(
+          new AppError({
+            name: "DuplicateKeyError",
+            message: `${field} already exists`,
+            type: "DUPLICATE_KEY",
+            code: 409,
+            details: {
+              field,
+              value: error.keyValue[field],
+            },
+          })
+        );
+      }
+
+      return next(error);
     }
+  }
+);
 
-    let newUser = new User();
-    const newSalt = uuidv4();
-    newUser.username = req.body.username;
+router.post("/login", async (req, res, next) => {
+  // console.log(`🔹 Requested route: auth/login`);
 
-    newUser.salt = newSalt;
-    newUser.hash = SHA256(req.body.password + newSalt).toString(encBase64);
-    newUser.token = uuidv4();
+  try {
+    // const userQuery = await User.findOne({ username: req.body.username });
 
-    const response = await newUser.save();
+    // if (!userQuery) {
+    //   console.log("User not found");
+    //   return res.status(401).json({ message: "Wrong user or password" });
+    // }
+    // console.log("User found");
 
-    return res.status(201).json({
-      message: `Welcome, ${response.username}`,
-      username: response.username,
-      token: response.token,
-    });
+    // let visitorHash = SHA256(req.body.password + userQuery.salt).toString(
+    //   encBase64
+    // );
+
+    // if (visitorHash === userQuery.hash) {
+    //   console.log("Password is correct");
+    //   return res.status(200).json({
+    //     message: `Welcome back, ${userQuery.username}`,
+    //     username: userQuery.username,
+    //     token: userQuery.token,
+    //   });
+    // } else {
+    //   console.log("Wrong password");
+    //   return res.status(401).json({ message: "Wrong user or password" });
+    // }
+    return res.status(200).json({ message: "yo" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    throw error;
   }
 });
 
-router.post("/user/login", async (req, res) => {
-  console.log(`🔹 Requested route: user/login`);
+router.post("/logout", async (req, res, next) => {
+  // console.log(`🔹 Requested route: auth/logout`);
 
   try {
-    const userQuery = await User.findOne({ username: req.body.username });
-
-    if (!userQuery) {
-      console.log("User not found");
-      return res.status(401).json({ message: "Wrong user or password" });
-    }
-    console.log("User found");
-
-    let visitorHash = SHA256(req.body.password + userQuery.salt).toString(
-      encBase64
-    );
-
-    if (visitorHash === userQuery.hash) {
-      console.log("Password is correct");
-      return res.status(200).json({
-        message: `Welcome back, ${userQuery.username}`,
-        username: userQuery.username,
-        token: userQuery.token,
-      });
-    } else {
-      console.log("Wrong password");
-      return res.status(401).json({ message: "Wrong user or password" });
-    }
+    return res.status(200).json({ message: "yo" });
   } catch (error) {
-    return res.status(500).json({ message: error.message });
+    throw error;
   }
 });
 

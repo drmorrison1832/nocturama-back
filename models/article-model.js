@@ -12,6 +12,12 @@ const articleSchema = new mongoose.Schema({
   updated: [Date],
   show: { type: Boolean, default: true },
   tags: [{ type: String, lowercase: true }],
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    // require: [true, "Owner is required"],
+    // unique: [true, "Owner is unique"],
+  },
 });
 
 articleSchema.pre("save", function (next) {

@@ -1,5 +1,6 @@
 class AppError extends Error {
   constructor({ name, message, code, type, details }) {
+    // console.log("Building AppError...");
     super(message || "Something went wrong on server side");
     this.name = name || "internalServerError";
     this.status = "error";
@@ -16,30 +17,31 @@ class AppError extends Error {
 }
 
 class JSONParseError extends AppError {
-  constructor(MongoDbSyntaxError) {
+  constructor({ name, message, code, type, details }) {
+    // console.log("Building JSONParseError...");
     super({
-      name: MongoDbSyntaxError.name,
-      message: "Invalid JSON format in request body",
-      code: 400,
-      type: "INVALID_JSON", // or should it be "BAD_REQUEST"?
-      details: MongoDbSyntaxError.message,
+      name: name,
+      message: message || "Invalid JSON format in request body",
+      code: code || 400,
+      type: type || "INVALID_JSON", // or should it be "BAD_REQUEST"?
+      details: details || null,
     });
   }
 }
 
 class ValidationError extends AppError {
-  constructor(MongoDbValidationError) {
+  constructor({ name, _message, message, code, type, details, errors }) {
+    // console.log("Building ValidationError");
     super({
-      name: "ValidationError",
-      message: MongoDbValidationError._message,
-      code: 422,
-      type: "VALIDATION_ERROR",
+      name: name || "ValidationError",
+      message: _message || message,
+      code: code || 422,
+      type: type || "VALIDATION_ERROR",
     });
-    this.details =
-      MongoDbValidationError?.errors &&
-      `Missing or invalid fields: ${Object.keys(
-        MongoDbValidationError.errors
-      ).join(", ")}`;
+
+    this.details = errors
+      ? `Missing or invalid fields: ${Object.keys(errors).join(", ")}`
+      : details || null;
   }
 }
 

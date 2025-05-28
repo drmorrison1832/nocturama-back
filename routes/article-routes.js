@@ -1,8 +1,8 @@
-// TO DO : add
-
 const router = require("express").Router();
 
-const Article = require("../models/article");
+const Article = require("../models/article-model");
+const User = require("../models/user-model");
+
 const validateID = require("../middleware/validateID");
 const validateEntry = require("../middleware/validateEntry");
 const validateResourceExists = require("../middleware/validateResourceExists");
@@ -33,21 +33,17 @@ router.post("/articles", validateEntry(Article), async (req, res, next) => {
       data: response,
     });
   } catch (error) {
-    return next(error);
+    throw error;
   }
 });
 
 router.put(
   "/articles/:id",
+  validateID,
   validateResourceExists(Article),
   validateEntry(Article),
   async (req, res, next) => {
     try {
-      // const existingArticle = await Article.findById(req.params.id);
-      // if (!existingArticle) {
-      //   return res.status(404).json({ message: "Article not found" });
-      // }
-
       const replacementArticle = req.body;
 
       const hasChanges = Object.keys(replacementArticle).some(
@@ -68,7 +64,7 @@ router.put(
 
       return res.status(200).json(response);
     } catch (error) {
-      return next(error);
+      throw error;
     }
   }
 );
@@ -145,7 +141,7 @@ router.get("/articles", validateDates, async (req, res, next) => {
       articles,
     });
   } catch (error) {
-    return next(error);
+    throw error;
   }
 });
 
@@ -167,7 +163,7 @@ router.delete(
         },
       });
     } catch (error) {
-      return next(error);
+      throw error;
     }
   }
 );

@@ -24,7 +24,7 @@ function validateID(req, res, next) {
     },
   });
 
-  return next(error);
+  throw error;
 }
 
 module.exports = validateID;

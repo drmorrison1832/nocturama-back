@@ -20,6 +20,8 @@ const cors = require("cors");
 const parseJSON = require("./utils/parseJSON");
 const showReq = require("./middleware/showReq");
 const articleRoutes = require("./routes/article-routes");
+const userRoutes = require("./routes/user-routes");
+
 const handleError = require("./middleware/handleError");
 
 const corsOptions = {
@@ -33,6 +35,7 @@ app.use(cors(corsOptions));
 app.use(express.json({ verify: parseJSON }));
 app.use(showReq);
 app.use("/admin", articleRoutes);
+app.use("/auth", userRoutes);
 app.use(handleError);
 
 app.all("/{*splat}", (req, res) => {

@@ -3,6 +3,7 @@ const { AppError } = require("../utils/customErrors");
 function validateResourceExists(Model) {
   return async (req, res, next) => {
     console.log("\n⚠️  validateResourceExists...");
+
     try {
       const { id } = req.params;
 
@@ -16,18 +17,15 @@ function validateResourceExists(Model) {
           name: "NotFoundError",
           code: 404,
           type: "NOT_FOUND",
-          details: `Resource not found ${Object.keys(Model)[0]} with ID ${
-            req.params.id
-          }`,
+          details: `${Model.modelName} not found with ID ${req.params.id}`,
         });
 
-        error.log();
         throw error;
       }
       console.log("✅ ID validation successful");
       return next();
     } catch (error) {
-      return next(error);
+      throw error;
     }
   };
 }

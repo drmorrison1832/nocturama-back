@@ -11,7 +11,13 @@ function parseJSON(req, res, buf) {
     }
   } catch (e) {
     console.log("❌ JSON parsing failed");
-    throw new JSONParseError(e);
+    throw new JSONParseError({
+      name: e.name,
+      message: "Invalid JSON format in request body",
+      code: e.code,
+      type: "INVALID_JSON",
+      details: e.message,
+    });
   }
 }
 

@@ -11,10 +11,12 @@ function validateEntry(Model) {
     } catch (error) {
       console.log("❌ Validation failed");
 
-      const err = new ValidationError(error);
-      err.log();
+      const err = new ValidationError({
+        message: error._message,
+        errors: error.errors,
+      });
 
-      next(err);
+      throw err;
     }
   };
 }
