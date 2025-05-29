@@ -26,15 +26,16 @@ function validateDates(req, res, next) {
 
     if (!isValidDate(datesToValidate[date])) {
       console.log("❌ Invalid date format:", datesToValidate[date]);
-      const error = new AppError({
-        message: "Invalid date format",
-        name: "BadRequestError",
-        code: 400,
-        type: "INVALID_QUERY_PARAM",
-        details: `Wrong date format: ${datesToValidate[date]}. Date must be in YYYY-MM-DD format`,
-      });
 
-      throw error;
+      return next(
+        new AppError({
+          message: "Invalid date format",
+          name: "BadRequestError",
+          code: 400,
+          type: "INVALID_QUERY_PARAM",
+          details: `Wrong date format: ${datesToValidate[date]}. Date must be in YYYY-MM-DD format`,
+        })
+      );
     }
   });
 
@@ -45,27 +46,27 @@ function validateDates(req, res, next) {
   if (updatedStartDate && updatedEndDate) {
     validatePeriod(updatedStartDate, updatedEndDate);
   }
-
+  console.log("✅ validateDates");
   next();
 }
 
 module.exports = validateDates;
 
 function validatePeriod(startDate, endDate) {
+  console.log("\n⚠️  validatePeriod...");
   if (startDate && endDate) {
     if (new Date(startDate) > new Date(endDate)) {
-      const error = new AppError({
-        message: "Invalid dates range",
-        name: "BadRequestError",
-        code: 400,
-        type: "INVALID_QUERY_PARAM",
-        details:
-          "Creation and update dates: end date must be later than start date",
-      });
-
-      throw error;
+      return next(
+        new AppError({
+          message: "Invalid dates range",
+          name: "BadRequestError",
+          code: 400,
+          type: "INVALID_QUERY_PARAM",
+          details:
+            "Creation and update dates: end date must be later than start date",
+        })
+      );
     }
-
-    console.log("OK");
+    console.log("✅ validatePeriod");
   }
 }

@@ -1,15 +1,15 @@
 const validateDates = require("./validateDates");
-const validateEmail = require("./validateEmail");
 const validateEntry = require("./validateEntry");
 const validateID = require("./validateID");
-const validatePassword = require("./validatePassword");
+const validateLoginInput = require("./validateLoginInput");
+const validateNewUserInput = require("./validateNewUserInput");
 const validateResourceExists = require("./validateResourceExists");
 
 module.exports = {
   validateDates,
-  validateEmail,
   validateEntry,
   validateID,
-  validatePassword,
+  validateLoginInput,
+  validateNewUserInput,
   validateResourceExists,
 };

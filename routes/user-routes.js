@@ -1,70 +1,78 @@
 const router = require("express").Router();
-
 const { AppError, ValidationError } = require("../utils/customErrors");
-
-const Article = require("../models/article-model");
 const User = require("../models/user-model");
+// const Article = require("../models/article-model");
 
 const {
-  validatePassword,
-  validateEmail,
+  validateNewUserInput,
+  validateResourceExists,
 } = require("../middleware/validators-index");
-
-const { randomUUID } = require("crypto");
-// const { v4: uuidv4 } = require("uuid");
-
+const sanitizeEmail = require("../utils/sanitizeEmail");
+const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
 
-router.post(
-  "/signup",
-  validateEmail,
-  validatePassword,
-  async (req, res, next) => {
-    try {
-      const { email, password } = req.body;
+router.post("/signup", validateNewUserInput, async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
 
-      const salt = randomUUID();
-      const hash = SHA256(password + salt).toString(encBase64);
-      const token = randomUUID();
+    // Generate authentication credentials
+    const salt = randomUUID();
+    const hash = SHA256(password + salt).toString(encBase64);
+    const token = randomUUID();
 
-      const newUser = new User({ email, salt, hash, token });
-      await newUser.save();
+    const newUser = new User({
+      email: sanitizeEmail(email),
+      salt,
+      hash,
+      token,
+    });
+    await newUser.save();
 
-      return res.status(201).json({
-        status: "success",
-        message: "User created successfully",
-        data: {
-          email: newUser.email,
-          token: newUser.token,
-        },
-      });
-    } catch (error) {
-      if (error.code === 11000) {
-        const field = Object.keys(error.keyPattern)[0];
-
-        return next(
-          new AppError({
-            name: "DuplicateKeyError",
-            message: `${field} already exists`,
-            type: "DUPLICATE_KEY",
-            code: 409,
-            details: {
-              field,
-              value: error.keyValue[field],
-            },
-          })
-        );
-      }
-
-      return next(error);
+    return res.status(201).json({
+      status: "success",
+      message: "User created successfully",
+      data: {
+        email: newUser.email,
+        token: newUser.token,
+      },
+    });
+  } catch (error) {
+    // Handle duplicate email
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      return next(
+        new AppError({
+          name: "DuplicateKeyError",
+          message: `${field} already registered`,
+          type: "DUPLICATE_KEY",
+          code: 409,
+          details: {
+            field,
+            value: error.keyValue[field],
+          },
+        })
+      );
     }
+
+    // If there's an error here, it would be a server-side error
+    if (error.name === "ValidationError") {
+      return next(
+        new AppError({
+          name: "ValidationError",
+          message: "Server-side validation failed",
+          type: "VALIDATION_ERROR",
+          code: 500,
+          details: error.message,
+        })
+      );
+    }
+
+    return next(error);
   }
-);
+});
 
-router.post("/login", async (req, res, next) => {
-  // console.log(`🔹 Requested route: auth/login`);
-
+router.post("/login", validateResourceExists(User), async (req, res, next) => {
   try {
     // const userQuery = await User.findOne({ username: req.body.username });
 

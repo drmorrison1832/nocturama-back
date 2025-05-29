@@ -8,7 +8,6 @@ class AppError extends Error {
     this.type = type || "INTERNAL_SERVER_ERROR";
     this.details = details || null;
   }
-
   log() {
     console.log("❌ Error:", this.message);
     Object.keys(this).forEach((key) => console.log("❌", key, ":", this[key]));
@@ -18,7 +17,6 @@ class AppError extends Error {
 
 class JSONParseError extends AppError {
   constructor({ name, message, code, type, details }) {
-    // console.log("Building JSONParseError...");
     super({
       name: name,
       message: message || "Invalid JSON format in request body",
@@ -31,7 +29,6 @@ class JSONParseError extends AppError {
 
 class ValidationError extends AppError {
   constructor({ name, _message, message, code, type, details, errors }) {
-    // console.log("Building ValidationError");
     super({
       name: name || "ValidationError",
       message: _message || message,

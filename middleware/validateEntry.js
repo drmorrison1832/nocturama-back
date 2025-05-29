@@ -6,17 +6,16 @@ function validateEntry(Model) {
     try {
       const entry = new Model(req.body);
       await entry.validate();
-      console.log("✅ Validation successful");
+      console.log("✅ validateEntry");
       return next();
     } catch (error) {
       console.log("❌ Validation failed");
-
-      const err = new ValidationError({
-        message: error._message,
-        errors: error.errors,
-      });
-
-      throw err;
+      return next(
+        new ValidationError({
+          message: error._message,
+          errors: error.errors,
+        })
+      );
     }
   };
 }

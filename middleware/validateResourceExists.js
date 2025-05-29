@@ -1,31 +1,50 @@
 const { AppError } = require("../utils/customErrors");
 
+const sanitizeEmail = require("../utils/sanitizeEmail");
+
 function validateResourceExists(Model) {
   return async (req, res, next) => {
     console.log("\n⚠️  validateResourceExists...");
 
     try {
-      const { id } = req.params;
+      let verificationKey;
+      let verfcationValue;
 
-      const exists = await Model.exists({ _id: id });
+      switch (Model.modelName) {
+        case "Article":
+          verificationKey = "_id";
+          verificationValue = req.params.id;
+
+          break;
+        case "User":
+          verificationKey = "email";
+          verificationValue = sanitizeEmail(req.body.email);
+        default:
+          break;
+      }
+
+      let query = {};
+      query[verificationKey] = verificationValue;
+
+      const exists = await Model.exists(query);
 
       if (!exists) {
         console.log("❌ Resource not found");
-
-        const error = new AppError({
-          message: "Resource not found",
-          name: "NotFoundError",
-          code: 404,
-          type: "NOT_FOUND",
-          details: `${Model.modelName} not found with ID ${req.params.id}`,
-        });
-
-        throw error;
+        console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅");
+        return next(
+          new AppError({
+            message: "Resource not found",
+            name: "NotFoundError",
+            code: 404,
+            type: "NOT_FOUND",
+            details: `${Model.modelName} not found with ${verificationKey}: ${verificationValue}`,
+          })
+        );
       }
-      console.log("✅ ID validation successful");
+      console.log("✅ validateResourceExists");
       return next();
     } catch (error) {
-      throw error;
+      return next(error);
     }
   };
 }
