@@ -1,12 +1,19 @@
 const router = require("express").Router();
+
 const { AppError, ValidationError } = require("../utils/customErrors");
+
 const User = require("../models/user-model");
 // const Article = require("../models/article-model");
 
 const {
+  validateToken,
+  validateLoginInput,
   validateNewUserInput,
-  validateResourceExists,
-} = require("../middleware/validators-index");
+  validateUserEmailExists,
+} = require("../middleware/middlewareValidators-index");
+
+const validatePassword = require("../utils/validatePassword");
+
 const sanitizeEmail = require("../utils/sanitizeEmail");
 const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
 const SHA256 = require("crypto-js/sha256");
@@ -34,7 +41,9 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
       message: "User created successfully",
       data: {
         email: newUser.email,
+        id: newUser._id,
         token: newUser.token,
+        articles: newUser.articles,
       },
     });
   } catch (error) {
@@ -44,26 +53,9 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
       return next(
         new AppError({
           name: "DuplicateKeyError",
-          message: `${field} already registered`,
+          message: `User already registered`,
           type: "DUPLICATE_KEY",
           code: 409,
-          details: {
-            field,
-            value: error.keyValue[field],
-          },
-        })
-      );
-    }
-
-    // If there's an error here, it would be a server-side error
-    if (error.name === "ValidationError") {
-      return next(
-        new AppError({
-          name: "ValidationError",
-          message: "Server-side validation failed",
-          type: "VALIDATION_ERROR",
-          code: 500,
-          details: error.message,
         })
       );
     }
@@ -72,44 +64,55 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
   }
 });
 
-router.post("/login", validateResourceExists(User), async (req, res, next) => {
-  try {
-    // const userQuery = await User.findOne({ username: req.body.username });
+router.post(
+  "/login",
+  validateLoginInput,
+  validateUserEmailExists,
+  async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
 
-    // if (!userQuery) {
-    //   console.log("User not found");
-    //   return res.status(401).json({ message: "Wrong user or password" });
-    // }
-    // console.log("User found");
+      const user = await User.findOne({ email }).select("+hash +salt");
 
-    // let visitorHash = SHA256(req.body.password + userQuery.salt).toString(
-    //   encBase64
-    // );
+      const { hash, salt } = user;
 
-    // if (visitorHash === userQuery.hash) {
-    //   console.log("Password is correct");
-    //   return res.status(200).json({
-    //     message: `Welcome back, ${userQuery.username}`,
-    //     username: userQuery.username,
-    //     token: userQuery.token,
-    //   });
-    // } else {
-    //   console.log("Wrong password");
-    //   return res.status(401).json({ message: "Wrong user or password" });
-    // }
-    return res.status(200).json({ message: "yo" });
-  } catch (error) {
-    throw error;
+      validatePassword(hash, salt, password);
+
+      const newToken = randomUUID();
+
+      user.token = newToken;
+
+      await user.save();
+
+      return res.status(200).json({
+        status: "succes",
+        message: "Login successful",
+        data: {
+          email: user.email,
+          id: user._id,
+          token: newToken,
+          articles: user.articles,
+        },
+      });
+    } catch (error) {
+      return next(error);
+    }
   }
-});
+);
 
-router.post("/logout", async (req, res, next) => {
-  // console.log(`🔹 Requested route: auth/logout`);
-
+router.post("/logout", validateToken, async (req, res, next) => {
   try {
-    return res.status(200).json({ message: "yo" });
+    const user = await User.findById(req.userID);
+
+    user.token = null;
+    user.save();
+
+    return res.status(200).json({
+      status: "success",
+      message: "Logout successful",
+    });
   } catch (error) {
-    throw error;
+    return next(error);
   }
 });
 

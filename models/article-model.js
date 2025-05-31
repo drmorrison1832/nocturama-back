@@ -3,15 +3,19 @@ const mongoose = require("mongoose");
 mongoose.Schema.Types.String.set("trim", true);
 
 const articleSchema = new mongoose.Schema({
-  title: { type: String, required: [true, "Title is required"] },
-  author: String,
-  description: { type: String, required: [true, "Description is required"] },
-  coverImage: String,
-  link: String,
+  title: { type: String, required: [true, "Title is required"], trim: true },
+  author: { type: String, trim: true },
+  description: {
+    type: String,
+    required: [true, "Description is required"],
+    trim: true,
+  },
+  mainImage: { type: String, trim: true },
+  link: { type: String, trim: true },
   created: { type: Date, default: () => Date.now() },
   updated: [Date],
   show: { type: Boolean, default: true },
-  tags: [{ type: String, lowercase: true }],
+  tags: [{ type: String, lowercase: true, trim: true }],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

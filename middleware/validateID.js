@@ -8,7 +8,7 @@ function validateID(req, res, next) {
   const { id } = req.params;
 
   if (mongoose.Types.ObjectId.isValid(id)) {
-    console.log("✅ ID validation successful");
+    console.log("✅ validateID");
     return next();
   }
 

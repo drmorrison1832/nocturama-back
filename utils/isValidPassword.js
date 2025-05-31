@@ -1,7 +1,7 @@
-function isValidPassword(req, res, next) {
+function isValidPassword(password) {
   // console.log("\n⚠️  isValidPassword...");
 
-  if (typeof req?.body?.password !== "string") {
+  if (typeof password !== "string") {
     return false;
   }
 

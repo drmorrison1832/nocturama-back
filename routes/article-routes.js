@@ -1,8 +1,8 @@
 const router = require("express").Router();
 
 const Article = require("../models/article-model");
-const User = require("../models/user-model");
 
+const validateArticleExists = require("../middleware/validateArticleExists");
 const validateID = require("../middleware/validateID");
 const validateEntry = require("../middleware/validateEntry");
 const validateResourceExists = require("../middleware/validateResourceExists");
@@ -22,49 +22,73 @@ const SEARCH_FIELDS = [
   "updatedEndDate",
 ];
 
-router.post("/articles", validateEntry(Article), async (req, res, next) => {
-  try {
-    const newArticle = new Article(req.body);
-    const response = await newArticle.save();
+router.post(
+  "/articles",
+  validateEntry(Article, "_id", "id"),
+  async (req, res, next) => {
+    try {
+      const newArticle = new Article(req.body);
+      const response = await newArticle.save();
 
-    return res.status(201).json({
-      status: "success",
-      message: "Article created successfully",
-      data: response,
-    });
-  } catch (error) {
-    throw error;
+      return res.status(201).json({
+        status: "success",
+        message: "Article created successfully",
+        data: response,
+      });
+    } catch (error) {
+      return next(error);
+    }
   }
-});
+);
 
 router.put(
   "/articles/:id",
   validateID,
-  validateResourceExists(Article),
+  validateArticleExists,
   validateEntry(Article),
   async (req, res, next) => {
     try {
-      const replacementArticle = req.body;
+      const keysToCompare = [
+        "title",
+        "author",
+        "mainImage",
+        "link",
+        "show",
+        "tags",
+      ];
 
-      const hasChanges = Object.keys(replacementArticle).some(
-        (key) =>
-          existingArticle[key]?.toString() !==
-          replacementArticle[key]?.toString()
-      );
+      const normalizedUpdates = new Article(req.body).toObject();
+      const existingArticle = await Article.findById(req.params.id);
+
+      let hasChanges = false;
+
+      keysToCompare.forEach((key) => {
+        if (
+          JSON.stringify(normalizedUpdates[key]) !==
+          JSON.stringify(existingArticle[key])
+        ) {
+          hasChanges = true;
+          existingArticle[key] = normalizedUpdates[key];
+        }
+      });
 
       if (!hasChanges) {
         return res.status(200).json({
+          status: "success",
           message: "Nothing to update",
-          article: existingArticle,
+          data: { id: existingArticle._id },
         });
       }
 
-      Object.assign(existingArticle, replacementArticle);
       const response = await existingArticle.save();
 
-      return res.status(200).json(response);
+      return res.status(200).json({
+        status: "success",
+        message: "Article updated successfully",
+        data: response,
+      });
     } catch (error) {
-      throw error;
+      return next(error);
     }
   }
 );
@@ -141,31 +165,27 @@ router.get("/articles", validateDates, async (req, res, next) => {
       articles,
     });
   } catch (error) {
-    throw error;
+    return next(error);
   }
 });
 
-router.delete(
-  "/articles/:id",
-  validateID,
-  validateResourceExists(Article),
-  async (req, res, next) => {
-    try {
-      const { id } = req.params;
-      const deletedArticle = await Article.findByIdAndDelete(id);
+router.delete("/articles/:id", validateID, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    validateResourceExists(Article, { _id: id });
+    const deletedArticle = await Article.findByIdAndDelete(id);
 
-      return res.status(200).json({
-        status: "success",
-        message: "Article deleted successfully",
-        data: {
-          id: deletedArticle._id,
-          title: deletedArticle.title,
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
+    return res.status(200).json({
+      status: "success",
+      message: "Article deleted successfully",
+      data: {
+        id: deletedArticle._id,
+        title: deletedArticle.title,
+      },
+    });
+  } catch (error) {
+    return next(error);
   }
-);
+});
 
 module.exports = router;
