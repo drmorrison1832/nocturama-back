@@ -2,15 +2,20 @@ const router = require("express").Router();
 
 const Article = require("../models/article-model");
 
-const validateArticleExists = require("../middleware/validateArticleExists");
-const validateID = require("../middleware/validateID");
-const validateEntry = require("../middleware/validateEntry");
-const validateResourceExists = require("../middleware/validateResourceExists");
-const validateDates = require("../middleware/validateDates");
+const {
+  validateArticleExists,
+  validateEntry,
+  validateDates,
+  validateID,
+  validateResourceExists,
+  validateAuthorization,
+} = require("../middleware/middlewareValidators-index");
 
-const parsePagination = require("../utils/parsePagination");
-const parseSort = require("../utils/parseSort");
-const parseShow = require("../utils/parseShow");
+const {
+  parsePagination,
+  parseShow,
+  parseSort,
+} = require("../utils/parsers-index");
 
 const SEARCH_FIELDS = [
   "title",
@@ -24,10 +29,12 @@ const SEARCH_FIELDS = [
 
 router.post(
   "/articles",
+  validateAuthorization,
   validateEntry(Article, "_id", "id"),
   async (req, res, next) => {
     try {
       const newArticle = new Article(req.body);
+      newArticle.owner = req.userID;
       const response = await newArticle.save();
 
       return res.status(201).json({

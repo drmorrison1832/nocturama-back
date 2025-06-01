@@ -1,12 +1,12 @@
 const router = require("express").Router();
 
-const { AppError, ValidationError } = require("../utils/customErrors");
+const { AppError } = require("../utils/customErrors");
 
 const User = require("../models/user-model");
 // const Article = require("../models/article-model");
 
 const {
-  validateToken,
+  validateAuthorization,
   validateLoginInput,
   validateNewUserInput,
   validateUserEmailExists,
@@ -23,18 +23,16 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // Generate authentication credentials
     const salt = randomUUID();
     const hash = SHA256(password + salt).toString(encBase64);
     const token = randomUUID();
 
-    const newUser = new User({
+    const newUser = await User.create({
       email: sanitizeEmail(email),
       salt,
       hash,
       token,
     });
-    await newUser.save();
 
     return res.status(201).json({
       status: "success",
@@ -47,9 +45,7 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
       },
     });
   } catch (error) {
-    // Handle duplicate email
     if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern)[0];
       return next(
         new AppError({
           name: "DuplicateKeyError",
@@ -74,18 +70,15 @@ router.post(
 
       const user = await User.findOne({ email }).select("+hash +salt");
 
-      const { hash, salt } = user;
-
-      validatePassword(hash, salt, password);
+      // Thorws UnauthorizedError if wrong password
+      validatePassword(user.hash, user.salt, password);
 
       const newToken = randomUUID();
-
       user.token = newToken;
-
       await user.save();
 
       return res.status(200).json({
-        status: "succes",
+        status: "success",
         message: "Login successful",
         data: {
           email: user.email,
@@ -100,12 +93,9 @@ router.post(
   }
 );
 
-router.post("/logout", validateToken, async (req, res, next) => {
+router.post("/logout", validateAuthorization, async (req, res, next) => {
   try {
-    const user = await User.findById(req.userID);
-
-    user.token = null;
-    user.save();
+    await User.findByIdAndUpdate(req.userID, { token: null });
 
     return res.status(200).json({
       status: "success",

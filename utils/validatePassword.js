@@ -9,7 +9,7 @@ function validatePassword(hash, salt, password) {
   if (SHA256(password + salt).toString(encBase64) !== hash) {
     throw new AppError({
       message: "Wrong email or password",
-      name: "unauthorizedError",
+      name: "UnauthorizedError",
       code: 401,
       type: "UNAUTHORIZED",
     });

@@ -1,7 +1,7 @@
 const { AppError } = require("../utils/customErrors");
 const User = require("../models/user-model");
 
-async function validateToken(req, res, next) {
+async function validateAuthorization(req, res, next) {
   console.log("\n⚠️  validateToken...");
 
   try {
@@ -42,4 +42,4 @@ async function validateToken(req, res, next) {
   }
 }
 
-module.exports = validateToken;
+module.exports = validateAuthorization;
