@@ -6,9 +6,9 @@ async function validateArticleExists(req, res, next) {
   const id = req.params.id;
 
   try {
-    const exists = await Article.exists({ _id: id });
+    const article = await Article.findById(id);
 
-    if (!exists) {
+    if (!article) {
       console.log("❌ Article not found");
       return next(
         new AppError({
@@ -20,6 +20,8 @@ async function validateArticleExists(req, res, next) {
         })
       );
     }
+
+    req.article = article;
     console.log("✅ validateArticleExists");
     return next();
   } catch (error) {

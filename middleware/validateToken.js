@@ -1,7 +1,7 @@
 const { AppError } = require("../utils/customErrors");
 const User = require("../models/user-model");
 
-async function validateAuthorization(req, res, next) {
+async function validateToken(req, res, next) {
   console.log("\n⚠️  validateToken...");
 
   try {
@@ -19,21 +19,21 @@ async function validateAuthorization(req, res, next) {
       );
     }
 
-    const userExists = await User.exists({ token });
+    const user = await User.findOne({ token });
 
-    if (!userExists) {
+    if (!user) {
       console.log("❌ User not found");
       return next(
         new AppError({
           message: "Invalid token",
-          name: "unauthorizedError",
+          name: "UnauthorizedError",
           code: 401,
           type: "UNAUTHORIZED",
         })
       );
     }
 
-    req.userID = userExists._id;
+    req.user = user;
 
     console.log("✅ validateToken");
     return next();
@@ -42,4 +42,4 @@ async function validateAuthorization(req, res, next) {
   }
 }
 
-module.exports = validateAuthorization;
+module.exports = validateToken;

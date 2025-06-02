@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+// const User = require("../models/user-model");
 
 mongoose.Schema.Types.String.set("trim", true);
 
@@ -19,23 +20,25 @@ const articleSchema = new mongoose.Schema({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    // require: [true, "Owner is required"],
-    // unique: [true, "Owner is unique"],
+    // required: [true, "Owner is required"],
+    unique: [true, "Owner is unique"],
   },
 });
 
+let wasNewArticle;
+
 articleSchema.pre("save", function (next) {
+  wasNewArticle = this.isNew;
   if (!this.isNew) {
     this.updated.push(Date.now());
   }
   next();
 });
 
-articleSchema.post("save", function (doc) {
-  if (this.isNew) {
-    console.log("✅ Article saved");
-  }
-  console.log("✅ Article updated");
+articleSchema.post("save", async function (doc) {
+  wasNewArticle
+    ? console.log("✅ Article created")
+    : console.log("✅ Article updated");
 });
 
 const Article = mongoose.model("Article", articleSchema);

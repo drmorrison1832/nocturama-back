@@ -6,9 +6,9 @@ const User = require("../models/user-model");
 // const Article = require("../models/article-model");
 
 const {
-  validateAuthorization,
   validateLoginInput,
   validateNewUserInput,
+  validateToken,
   validateUserEmailExists,
 } = require("../middleware/middlewareValidators-index");
 
@@ -93,9 +93,20 @@ router.post(
   }
 );
 
-router.post("/logout", validateAuthorization, async (req, res, next) => {
+router.post("/logout", validateToken, async (req, res, next) => {
   try {
-    await User.findByIdAndUpdate(req.userID, { token: null });
+    const user = User.findByIdAndUpdate(req.user._id, { token: "" });
+
+    if (!user) {
+      return next(
+        new AppError({
+          name: "NotFoundError",
+          message: `User not found`,
+          type: "NotFoundError",
+          code: 404,
+        })
+      );
+    }
 
     return res.status(200).json({
       status: "success",

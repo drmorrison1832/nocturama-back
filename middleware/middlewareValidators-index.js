@@ -1,8 +1,9 @@
 const validateArticleExists = require("./validateArticleExists");
-const validateAuthorization = require("./validateAuthorization");
+const validateArticleInput = require("./validateArticleInput");
+const validateToken = require("./validateToken");
 const validateDates = require("./validateDates");
-const validateEntry = require("./validateEntry");
 const validateID = require("./validateID");
+const validateIsOwner = require("./validateIsOwner");
 const validateLoginInput = require("./validateLoginInput");
 const validateNewUserInput = require("./validateNewUserInput");
 const validateResourceExists = require("./validateResourceExists");
@@ -10,12 +11,13 @@ const validateUserEmailExists = require("./validateUserEmailExists");
 
 module.exports = {
   validateArticleExists,
-  validateAuthorization,
+  validateArticleInput,
   validateDates,
-  validateEntry,
   validateID,
+  validateIsOwner,
   validateLoginInput,
   validateNewUserInput,
-  validateUserEmailExists,
   validateResourceExists,
+  validateToken,
+  validateUserEmailExists,
 };

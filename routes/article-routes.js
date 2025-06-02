@@ -1,14 +1,16 @@
 const router = require("express").Router();
 
 const Article = require("../models/article-model");
+const User = require("../models/user-model");
 
 const {
   validateArticleExists,
-  validateEntry,
+  validateArticleInput,
   validateDates,
   validateID,
+  validateIsOwner,
   validateResourceExists,
-  validateAuthorization,
+  validateToken,
 } = require("../middleware/middlewareValidators-index");
 
 const {
@@ -29,13 +31,22 @@ const SEARCH_FIELDS = [
 
 router.post(
   "/articles",
-  validateAuthorization,
-  validateEntry(Article, "_id", "id"),
+  validateToken,
+  validateArticleInput,
   async (req, res, next) => {
     try {
       const newArticle = new Article(req.body);
-      newArticle.owner = req.userID;
+      newArticle.owner = req.user._id;
+
       const response = await newArticle.save();
+
+      await User.findByIdAndUpdate(
+        req.user._id,
+        {
+          $push: { articles: newArticle._id },
+        },
+        { new: true }
+      );
 
       return res.status(201).json({
         status: "success",
@@ -50,9 +61,11 @@ router.post(
 
 router.put(
   "/articles/:id",
+  validateToken,
   validateID,
   validateArticleExists,
-  validateEntry(Article),
+  validateIsOwner,
+  validateArticleInput,
   async (req, res, next) => {
     try {
       const keysToCompare = [
@@ -176,23 +189,38 @@ router.get("/articles", validateDates, async (req, res, next) => {
   }
 });
 
-router.delete("/articles/:id", validateID, async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    validateResourceExists(Article, { _id: id });
-    const deletedArticle = await Article.findByIdAndDelete(id);
+router.delete(
+  "/articles/:id",
+  validateToken,
+  validateID,
+  validateArticleExists,
+  validateIsOwner,
+  async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      validateResourceExists(Article, { _id: id });
+      const deletedArticle = await Article.findByIdAndDelete(id);
 
-    return res.status(200).json({
-      status: "success",
-      message: "Article deleted successfully",
-      data: {
-        id: deletedArticle._id,
-        title: deletedArticle.title,
-      },
-    });
-  } catch (error) {
-    return next(error);
+      await User.findByIdAndUpdate(
+        req.user._id,
+        {
+          $pull: { articles: deletedArticle._id },
+        },
+        { new: true }
+      );
+
+      return res.status(200).json({
+        status: "success",
+        message: "Article deleted successfully",
+        data: {
+          id: deletedArticle._id,
+          title: deletedArticle.title,
+        },
+      });
+    } catch (error) {
+      return next(error);
+    }
   }
-});
+);
 
 module.exports = router;

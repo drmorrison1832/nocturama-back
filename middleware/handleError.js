@@ -6,6 +6,8 @@ function handleJsonError(err, req, res, next) {
 
   switch (err.name) {
     case "ValidationError": // from validateEntry.js
+    case "ForbiddenError": // from validateIsOwner.js
+    case "UnauthorizedError": // from validateAuthorization.js
     case "CastError": // from validateID.js
     case "NotFoundError": // from validateResourceExists.js
     case "BadRequestError": // from validateDates.js, parseShow.js, parseSort.js,

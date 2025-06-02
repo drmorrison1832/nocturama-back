@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const validateEntry = require("../middleware/validateEntry");
+const validateEntry = require("../middleware/validateArticleInput");
 
 mongoose.Schema.Types.String.set("trim", true);
 
@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
     trim: true,
+    index: true,
   },
   hash: {
     type: String,
@@ -25,6 +26,17 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
+});
+
+let wasNewUser;
+
+userSchema.pre("save", function (next) {
+  wasNewUser = this.isNew;
+  next();
+});
+
+userSchema.post("save", async function (doc) {
+  wasNewUser ? console.log("✅ User created") : console.log("✅ User updated");
 });
 
 const User = mongoose.model("User", userSchema);
