@@ -21,7 +21,6 @@ const articleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     // required: [true, "Owner is required"],
-    unique: [true, "Owner is unique"],
   },
 });
 

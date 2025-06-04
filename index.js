@@ -1,8 +1,18 @@
-const dotenv = require("dotenv");
-dotenv.config();
+require("dotenv").config();
+const env = process.env.NODE_ENV;
+const local = process.env.NODE_LOCAL === "true" ? true : false;
 
-// DB connection
+const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
+const parseJSON = require("./utils/parseJSON");
+const showReq = require("./middleware/showReq");
+const articleRoutes = require("./routes/article-routes");
+const userRoutes = require("./routes/user-routes");
+const handleError = require("./middleware/handleError");
+
+const app = express();
+
 (function connectToDB() {
   try {
     // mongoose.connect(process.env.MONGODB_URI); // Remote
@@ -15,27 +25,19 @@ const mongoose = require("mongoose");
 })();
 
 // Modules & middleware
-const express = require("express");
-const cors = require("cors");
-const parseJSON = require("./utils/parseJSON");
-const showReq = require("./middleware/showReq");
-const articleRoutes = require("./routes/article-routes");
-const userRoutes = require("./routes/user-routes");
-
-const handleError = require("./middleware/handleError");
 
 const corsOptions = {
-  // Nothing for the moment
+  // origin: process.env.CLIENT_URL || `http://localhost:${process.env.PORT}`,
+  // credentials: true,
+  // methods: ["GET", "POST", "PUT", "DELETE"],
+  // allowedHeaders: ["Content-Type", "Authorization"],
 };
-
-// Create server
-const app = express();
 
 app.use(cors(corsOptions));
 app.use(express.json({ verify: parseJSON }));
 app.use(showReq);
-app.use("/admin", articleRoutes);
-app.use("/auth", userRoutes);
+app.use("/admin/article", articleRoutes);
+app.use("/admin/auth", userRoutes);
 app.use(handleError);
 
 app.all("/{*splat}", (req, res) => {
@@ -43,6 +45,6 @@ app.all("/{*splat}", (req, res) => {
   return res.status(401).json("Nothing to see here...");
 });
 
-app.listen(process.env.PORT || 3200, () => {
-  console.info("🚀 Serveur started on port", process.env.PORT || 3200);
+app.listen(process.env.PORT, () => {
+  console.info("🚀 Serveur started on port", process.env.PORT);
 });

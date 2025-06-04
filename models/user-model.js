@@ -28,6 +28,8 @@ const userSchema = new mongoose.Schema({
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
 });
 
+userSchema.index({ email: 1 }, { unique: true });
+
 let wasNewUser;
 
 userSchema.pre("save", function (next) {
@@ -36,7 +38,7 @@ userSchema.pre("save", function (next) {
 });
 
 userSchema.post("save", async function (doc) {
-  wasNewUser ? console.log("✅ User created") : console.log("✅ User updated");
+  // wasNewUser ? console.log("✅ User created") : console.log("✅ User updated");
 });
 
 const User = mongoose.model("User", userSchema);

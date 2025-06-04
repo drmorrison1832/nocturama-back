@@ -5,8 +5,12 @@ async function validateArticleInput(req, res, next) {
   console.log("\n⚠️  validateArticleInput...");
 
   try {
-    const entry = new Article(req.body);
-    await entry.validate();
+    const newArticle = new Article(req.body);
+    newArticle.owner = req.user._id;
+    await newArticle.validate();
+
+    req.newArticle = newArticle;
+
     console.log("✅ validateArticleInput");
     return next();
   } catch (error) {

@@ -30,13 +30,14 @@ const SEARCH_FIELDS = [
 ];
 
 router.post(
-  "/articles",
+  "/",
   validateToken,
   validateArticleInput,
   async (req, res, next) => {
     try {
-      const newArticle = new Article(req.body);
-      newArticle.owner = req.user._id;
+      // const newArticle = new Article(req.body);
+      // newArticle.owner = req.user._id;
+      const newArticle = req.newArticle;
 
       const response = await newArticle.save();
 
@@ -60,7 +61,7 @@ router.post(
 );
 
 router.put(
-  "/articles/:id",
+  "/:id",
   validateToken,
   validateID,
   validateArticleExists,
@@ -77,18 +78,19 @@ router.put(
         "tags",
       ];
 
-      const normalizedUpdates = new Article(req.body).toObject();
-      const existingArticle = await Article.findById(req.params.id);
-
       let hasChanges = false;
+
+      // const normalizedUpdates = new Article(req.body).toObject();
+      const normalizedNewArticle = req.newArticle.toObject();
+      const existingArticle = await Article.findById(req.params.id);
 
       keysToCompare.forEach((key) => {
         if (
-          JSON.stringify(normalizedUpdates[key]) !==
+          JSON.stringify(normalizedNewArticle[key]) !==
           JSON.stringify(existingArticle[key])
         ) {
           hasChanges = true;
-          existingArticle[key] = normalizedUpdates[key];
+          existingArticle[key] = normalizedNewArticle[key];
         }
       });
 
@@ -99,6 +101,8 @@ router.put(
           data: { id: existingArticle._id },
         });
       }
+
+      console.log(existingArticle.owner);
 
       const response = await existingArticle.save();
 
@@ -113,7 +117,7 @@ router.put(
   }
 );
 
-router.get("/articles", validateDates, async (req, res, next) => {
+router.get("/", validateDates, async (req, res, next) => {
   try {
     const {
       skip = 0,
@@ -190,7 +194,7 @@ router.get("/articles", validateDates, async (req, res, next) => {
 });
 
 router.delete(
-  "/articles/:id",
+  "/:id",
   validateToken,
   validateID,
   validateArticleExists,
