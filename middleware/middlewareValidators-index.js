@@ -7,7 +7,8 @@ const validateIsOwner = require("./validateIsOwner");
 const validateLoginInput = require("./validateLoginInput");
 const validateNewUserInput = require("./validateNewUserInput");
 const validateResourceExists = require("./validateResourceExists");
-const validateUserEmailExists = require("./validateUserEmailExists");
+const validateUserExists = require("./validateUserExists");
+const validateUserIsActive = require("./validateUserIsActive");
 
 module.exports = {
   validateArticleExists,
@@ -19,5 +20,6 @@ module.exports = {
   validateNewUserInput,
   validateResourceExists,
   validateToken,
-  validateUserEmailExists,
+  validateUserExists,
+  validateUserIsActive,
 };

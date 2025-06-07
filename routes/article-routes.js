@@ -161,13 +161,13 @@ router.get("/", validateDates, async (req, res, next) => {
       query.show = parseShow(show);
     }
 
-    const [articles, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       Article.find(query).sort(parsedOrder).skip(parsedSkip).limit(parsedLimit),
       Article.countDocuments(query),
     ]);
 
     // Handle no results
-    if (!articles.length && total > 0 && skip > 0) {
+    if (!data.length && total > 0 && skip > 0) {
       return res.status(404).json({
         message: "Page not found",
         pagination: {
@@ -186,7 +186,7 @@ router.get("/", validateDates, async (req, res, next) => {
         limit: parsedLimit,
         hasMore: total > parsedSkip + parsedLimit,
       },
-      articles,
+      data,
     });
   } catch (error) {
     return next(error);

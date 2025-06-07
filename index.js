@@ -1,6 +1,4 @@
 require("dotenv").config();
-const env = process.env.NODE_ENV;
-const local = process.env.NODE_LOCAL === "true" ? true : false;
 
 const express = require("express");
 const mongoose = require("mongoose");
@@ -36,8 +34,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ verify: parseJSON }));
 app.use(showReq);
-app.use("/admin/article", articleRoutes);
-app.use("/admin/auth", userRoutes);
+app.use("/api/articles", articleRoutes);
+app.use("/api/auth", userRoutes);
 app.use(handleError);
 
 app.all("/{*splat}", (req, res) => {

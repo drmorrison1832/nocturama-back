@@ -2,26 +2,31 @@ const { AppError } = require("../utils/customErrors");
 const sanitizeEmail = require("../utils/sanitizeEmail");
 const User = require("../models/user-model");
 
-async function validateUserEmailExists(req, res, next) {
+async function validateUserExists(req, res, next) {
   console.log("\n⚠️  validateUserExists...");
 
   try {
     const email = sanitizeEmail(req.body.email);
 
-    const exists = await User.exists({ email: email });
+    const user = await User.findOne({ email: email });
 
-    if (!exists) {
+    if (!user) {
       console.log("❌ User not found");
       return next(
         new AppError({
           message: "Wrong email or password",
-          name: "unauthorizedError",
+          name: "UnauthorizedError",
           code: 401,
           type: "UNAUTHORIZED",
           details: null,
         })
       );
     }
+
+    console.log(user);
+
+    req.user = user;
+
     console.log("✅ validateUserExists");
     return next();
   } catch (error) {
@@ -29,4 +34,4 @@ async function validateUserEmailExists(req, res, next) {
   }
 }
 
-module.exports = validateUserEmailExists;
+module.exports = validateUserExists;

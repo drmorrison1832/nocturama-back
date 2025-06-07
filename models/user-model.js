@@ -26,9 +26,10 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
+  active: { type: Boolean, default: true },
 });
 
-userSchema.index({ email: 1 }, { unique: true });
+// userSchema.index({ email: 1 }, { unique: true });
 
 let wasNewUser;
 

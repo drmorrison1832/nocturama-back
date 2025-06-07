@@ -9,7 +9,8 @@ const {
   validateLoginInput,
   validateNewUserInput,
   validateToken,
-  validateUserEmailExists,
+  validateUserExists,
+  validateUserIsActive,
 } = require("../middleware/middlewareValidators-index");
 
 const validatePassword = require("../utils/validatePassword");
@@ -63,7 +64,8 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
 router.post(
   "/login",
   validateLoginInput,
-  validateUserEmailExists,
+  validateUserExists,
+  validateUserIsActive,
   async (req, res, next) => {
     try {
       const { email, password } = req.body;
@@ -95,7 +97,7 @@ router.post(
 
 router.post("/logout", validateToken, async (req, res, next) => {
   try {
-    const user = User.findByIdAndUpdate(req.user._id, { token: "" });
+    const user = req.user;
 
     if (!user) {
       return next(
@@ -108,6 +110,10 @@ router.post("/logout", validateToken, async (req, res, next) => {
       );
     }
 
+    user.token = "";
+    user.active = false;
+    user.save();
+
     return res.status(200).json({
       status: "success",
       message: "Logout successful",
@@ -116,5 +122,38 @@ router.post("/logout", validateToken, async (req, res, next) => {
     return next(error);
   }
 });
+
+router.post(
+  "/disable",
+  validateToken,
+  validateUserIsActive,
+  async (req, res, next) => {
+    try {
+      const user = req.user;
+
+      if (!user) {
+        return next(
+          new AppError({
+            name: "NotFoundError",
+            message: `User not found`,
+            type: "NotFoundError",
+            code: 404,
+          })
+        );
+      }
+
+      user.token = "";
+      user.active = false;
+      user.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "User account has been disconnected and disabled",
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+);
 
 module.exports = router;
