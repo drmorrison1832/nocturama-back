@@ -65,13 +65,11 @@ function validateNewUserInput(req, res, next) {
   if (!isValidEmail(req?.body?.email)) {
     console.log("❌ Wrong email format");
     return next(
-      new ValidationError(
-        new ValidationError({
-          message: "Invalid email address format",
-          code: 400,
-          details: `Received: ${req?.body?.email}`,
-        })
-      )
+      new ValidationError({
+        message: "Invalid email address format",
+        code: 400,
+        details: `Received: ${req?.body?.email}`,
+      })
     );
   }
 
