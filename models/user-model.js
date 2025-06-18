@@ -29,9 +29,10 @@ const userSchema = new mongoose.Schema({
   active: { type: Boolean, default: true },
 });
 
-// userSchema.index({ email: 1 }, { unique: true });
-
-let wasNewUser;
+userSchema.pre(/^find/, function (next) {
+  console.log("ACCESSING USER");
+  next();
+});
 
 userSchema.pre("save", function (next) {
   wasNewUser = this.isNew;

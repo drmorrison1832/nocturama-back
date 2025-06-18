@@ -2,6 +2,8 @@ function handleJsonError(err, req, res, next) {
   console.log("\n⚠️  handleError:", err.name);
   console.log("Error code is", err.code);
 
+  !err?.code && console.error(err);
+
   const errorResponse = buildErrorResponse(err);
 
   switch (err.name) {

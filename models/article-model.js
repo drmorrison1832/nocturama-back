@@ -26,6 +26,11 @@ const articleSchema = new mongoose.Schema({
 
 let wasNewArticle;
 
+articleSchema.pre(/^find/, function (next) {
+  console.log("ACCESSING USER");
+  next();
+});
+
 articleSchema.pre("save", function (next) {
   wasNewArticle = this.isNew;
   if (!this.isNew) {

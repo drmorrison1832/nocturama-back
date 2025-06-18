@@ -3,7 +3,6 @@ const PORT = process.env.PORT || 3000;
 
 const express = require("express");
 const helmet = require("helmet");
-const xss = require("xss-clean");
 const cors = require("cors");
 const parseJSON = require("./utils/parseJSON");
 const showReq = require("./middleware/showReq");
@@ -22,7 +21,6 @@ const corsOptions = {
 const app = express();
 
 app.use(helmet());
-app.use(xss());
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb", verify: parseJSON }));
 app.use(express.urlencoded({ extended: true }));
@@ -42,7 +40,6 @@ async function connectDB() {
     await mongoose.connect(
       process.env.MONGODB_URI_REMOTE || process.env.MONGODB_URI_LOCAL
     );
-
     console.log("☎️  Connection to database sucessfull");
 
     await Promise.all([
