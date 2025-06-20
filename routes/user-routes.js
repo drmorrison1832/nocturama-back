@@ -1,24 +1,47 @@
 const router = require("express").Router();
 
+// Import custom errors class
 const { AppError } = require("../utils/customErrors");
 
-const User = require("../models/user-model");
-// const Article = require("../models/article-model");
+// Import and set up time express-rate-limit
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 10,
+  handler: (req, res, next, options) =>
+    next(
+      new AppError({
+        message: "Too many tries.",
+        code: 429,
+        type: "TOO_MANY_REQUEST",
+        name: "TooManyRequests",
+      })
+    ),
+});
 
+// Import models
+const User = require("../models/user-model");
+
+// Import custom middleware
 const {
   validateLoginInput,
   validateNewUserInput,
+  validatePasswordIsCorrect,
   validateToken,
   validateUserExists,
   validateUserIsActive,
 } = require("../middleware/middlewareValidators-index");
 
-const validatePassword = require("../utils/validatePassword");
+// const validatePasswordIsCorrect = require("../utils/validatePasswordIsCorrect");
 
+// Import utils
 const sanitizeEmail = require("../utils/sanitizeEmail");
 const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
+
+// Setup route
+router.use(limiter);
 
 router.post("/signup", validateNewUserInput, async (req, res, next) => {
   try {
@@ -65,15 +88,13 @@ router.post(
   "/login",
   validateLoginInput,
   validateUserExists,
+  validatePasswordIsCorrect,
   validateUserIsActive,
   async (req, res, next) => {
     try {
-      const { email, password } = req.body;
+      const { email } = req.body;
 
       const user = await User.findOne({ email }).select("+hash +salt");
-
-      // Thorws UnauthorizedError if wrong password
-      validatePassword(user.hash, user.salt, password);
 
       const newToken = randomUUID();
       user.token = newToken;

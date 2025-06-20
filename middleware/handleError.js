@@ -14,6 +14,7 @@ function handleJsonError(err, req, res, next) {
     case "NotFoundError": // from validateResourceExists.js
     case "BadRequestError": // from validateDates.js, parseShow.js, parseSort.js,
     case "DuplicateKeyError":
+    case "TooManyRequests": // from index.js express-rate-limit
       err.log && err.log();
       return res.status(err.code).json(buildErrorResponse(err));
 
@@ -23,7 +24,7 @@ function handleJsonError(err, req, res, next) {
       return res.status(err.code).json(buildErrorResponse(err));
 
     default:
-      console.log("❌ Default error");
+      console.log("❌ Unkown error");
       return res.status(err.code || 500).json(buildErrorResponse(err));
   }
 }

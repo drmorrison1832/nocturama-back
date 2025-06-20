@@ -1,9 +1,28 @@
 const router = require("express").Router();
 
+// Import and set up time express-rate-limit
+const rateLimit = require("express-rate-limit");
+const limiter = rateLimit({
+  windowMs: 3 * 60 * 1000,
+  limit: 3,
+  handler: (req, res, next, options) =>
+    next(
+      new AppError({
+        message: "Too many tries.",
+        code: 429,
+        type: "TOO_MANY_REQUEST",
+        name: "TooManyRequests",
+      })
+    ),
+});
+
+// Import models
 const Article = require("../models/article-model");
 const User = require("../models/user-model");
 
+// Import custom middleware
 const {
+  sanitizeArticleInput,
   validateArticleExists,
   validateArticleInput,
   validateDates,
@@ -13,12 +32,14 @@ const {
   validateToken,
 } = require("../middleware/middlewareValidators-index");
 
+// Import utils
 const {
   parsePagination,
   parseShow,
   parseSort,
 } = require("../utils/parsers-index");
 
+// Enviroment variables
 const SEARCH_FIELDS = [
   "title",
   "author",
@@ -29,14 +50,27 @@ const SEARCH_FIELDS = [
   "updatedEndDate",
 ];
 
+const KEYS_TO_COMPARE = [
+  "title",
+  "author",
+  "mainImage",
+  "description",
+  "link",
+  "show",
+  "tags",
+];
+
+// Setup app
+
+router.use(limiter);
+
 router.post(
   "/",
   validateToken,
+  sanitizeArticleInput,
   validateArticleInput,
   async (req, res, next) => {
     try {
-      // const newArticle = new Article(req.body);
-      // newArticle.owner = req.user._id;
       const newArticle = req.newArticle;
 
       const response = await newArticle.save();
@@ -66,25 +100,17 @@ router.put(
   validateID,
   validateArticleExists,
   validateIsOwner,
+  sanitizeArticleInput,
   validateArticleInput,
   async (req, res, next) => {
     try {
-      const keysToCompare = [
-        "title",
-        "author",
-        "mainImage",
-        "link",
-        "show",
-        "tags",
-      ];
-
       let hasChanges = false;
 
-      // const normalizedUpdates = new Article(req.body).toObject();
       const normalizedNewArticle = req.newArticle.toObject();
+
       const existingArticle = await Article.findById(req.params.id);
 
-      keysToCompare.forEach((key) => {
+      KEYS_TO_COMPARE.forEach((key) => {
         if (
           JSON.stringify(normalizedNewArticle[key]) !==
           JSON.stringify(existingArticle[key])

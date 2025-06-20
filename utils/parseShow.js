@@ -2,8 +2,12 @@ const { AppError } = require("../utils/customErrors");
 
 function parseShow(show) {
   switch (show) {
+    case 1:
+    case true:
     case "true":
       return true;
+    case 0:
+    case false:
     case "false":
       return false;
     default:

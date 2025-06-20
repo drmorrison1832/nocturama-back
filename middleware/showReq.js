@@ -5,6 +5,7 @@ function showReq(req, res, then) {
   // console.log("Route is:", req.method + ":", req.url);
   // console.log("req is:");
 
+  console.log("rawHeaders:", req.rawHeaders);
   // req?.headers?.authorization &&
   //   console.log(
   //     "  headers.authorization (token):",

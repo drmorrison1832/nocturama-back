@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
 });
 
 userSchema.pre(/^find/, function (next) {
-  console.log("ACCESSING USER");
+  console.log("Acessing user...");
   next();
 });
 

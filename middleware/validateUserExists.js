@@ -8,7 +8,7 @@ async function validateUserExists(req, res, next) {
   try {
     const email = sanitizeEmail(req.body.email);
 
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email: email }).select("+hash +salt");
 
     if (!user) {
       console.log("❌ User not found");
@@ -22,9 +22,6 @@ async function validateUserExists(req, res, next) {
         })
       );
     }
-
-    console.log(user);
-
     req.user = user;
 
     console.log("✅ validateUserExists");

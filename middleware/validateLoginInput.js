@@ -38,6 +38,7 @@ function validateLoginInput(req, res, next) {
     );
   }
 
+  // Password robustness. NOT IMPLEMENTED
   if (!isValidPassword(req?.body?.password)) {
     console.log("❌ Wrong req.body.password format");
     return next(

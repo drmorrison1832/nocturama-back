@@ -1,16 +1,15 @@
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
+// Import custom errors class
+const { AppError } = require("./utils/customErrors");
+
+// Import modules
 const express = require("express");
+
+// Import middleware
 const helmet = require("helmet");
 const cors = require("cors");
-const parseJSON = require("./utils/parseJSON");
-const showReq = require("./middleware/showReq");
-const articleRoutes = require("./routes/article-routes");
-const userRoutes = require("./routes/user-routes");
-const handleError = require("./middleware/handleError");
-const mongoose = require("mongoose");
-
 const corsOptions = {
   origin: process.env.CLIENT_URL || `http://localhost:${process.env.PORT}`,
   credentials: true,
@@ -18,16 +17,26 @@ const corsOptions = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
+// Import custom middleware
+const parseJSON = require("./utils/parseJSON");
+const showReq = require("./middleware/showReq");
+const handleError = require("./middleware/handleError");
+
+// Create app
 const app = express();
 
-app.use(helmet());
-app.use(cors(corsOptions));
-app.use(express.json({ limit: "10mb", verify: parseJSON }));
-app.use(express.urlencoded({ extended: true }));
-app.use(showReq);
+// Setup App
+app.use(
+  // limiter,
+  helmet(),
+  // cors(corsOptions),
+  express.json({ limit: "150kb", verify: parseJSON }),
+  express.urlencoded({ extended: true }),
+  showReq
+);
 
-app.use("/api/articles", articleRoutes);
-app.use("/api/auth", userRoutes);
+app.use("/api/articles", require("./routes/article-routes"));
+app.use("/api/auth", require("./routes/user-routes"));
 
 app.use(handleError);
 
@@ -35,6 +44,8 @@ app.all("/{*splat}", (req, res) => {
   return res.status(404).json({ status: "error", message: "Route not found" });
 });
 
+// Set up DB connection
+const mongoose = require("mongoose");
 async function connectDB() {
   try {
     await mongoose.connect(
@@ -53,6 +64,7 @@ async function connectDB() {
   }
 }
 
+// 🚀 Launch server
 async function startServer() {
   await connectDB();
   app.listen(PORT, () => {
@@ -69,6 +81,6 @@ process.on("uncaughtException", (error) => {
 });
 
 process.on("unhandledRejection", (error) => {
-  console.error("❌ Unhandled Rejection:", error);
+  console.error("❌ Unhandled Promise Rejection:", error);
   process.exit(1);
 });
