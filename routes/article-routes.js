@@ -1,5 +1,7 @@
 const router = require("express").Router();
 
+const { AppError } = require("../utils/customErrors");
+
 // Import and set up time express-rate-limit
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({

@@ -1,9 +1,6 @@
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
-// Import custom errors class
-const { AppError } = require("./utils/customErrors");
-
 // Import modules
 const express = require("express");
 

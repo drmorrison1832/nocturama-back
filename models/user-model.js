@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const validateEntry = require("../middleware/validateArticleInput");
+const { escape } = require("validator");
 
 mongoose.Schema.Types.String.set("trim", true);
 
