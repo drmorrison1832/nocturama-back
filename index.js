@@ -1,3 +1,4 @@
+console.warn("\n🏁 Starting app");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
@@ -5,6 +6,7 @@ const PORT = process.env.PORT || 3000;
 const express = require("express");
 
 // Import middleware
+const morgan = require("morgan");
 const helmet = require("helmet");
 const cors = require("cors");
 const corsOptions = {
@@ -24,12 +26,13 @@ const app = express();
 
 // Setup App
 app.use(
-  // limiter,
+  morgan("dev", { immediate: false }),
+  morgan(":method :url :status :res[content-length] - :response-time ms"),
   helmet(),
   // cors(corsOptions),
   express.json({ limit: "150kb", verify: parseJSON }),
-  express.urlencoded({ extended: true }),
-  showReq
+  express.urlencoded({ extended: true })
+  // showReq
 );
 
 app.use("/api/articles", require("./routes/article-routes"));
@@ -44,6 +47,7 @@ app.all("/{*splat}", (req, res) => {
 // Set up DB connection
 const mongoose = require("mongoose");
 async function connectDB() {
+  console.log("☎️  Connecting to database...");
   try {
     await mongoose.connect(
       process.env.MONGODB_URI_REMOTE || process.env.MONGODB_URI_LOCAL
@@ -62,22 +66,52 @@ async function connectDB() {
 }
 
 // 🚀 Launch server
+
 async function startServer() {
   await connectDB();
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.info("🚀 Serveur started on port", PORT);
+
+    // Handle uncaught exceptions & other unexpected terminations
+    process.on("SIGTERM", async () => {
+      console.warn("SIGTERM signal received");
+      await closeServer(0);
+    });
+
+    process.on("SIGINT", async () => {
+      console.warn("SIGNINT signal received: closing server");
+      await closeServer(0);
+    });
+
+    process.on("uncaughtException", async (error) => {
+      console.error("❌ Uncaught Exception:", error);
+      await closeServer(1);
+    });
+
+    process.on("unhandledRejection", async (error) => {
+      console.error("❌ Unhandled Promise Rejection:", error);
+      await closeServer(1);
+    });
+
+    async function closeServer(code) {
+      console.info("Disconnecting from database");
+      try {
+        await mongoose.disconnect();
+        console.info("Successfully disconnected from database...");
+        console.info("Closing server...");
+        server.close(() => {
+          console.warn("Server closed");
+          process.exit(code);
+        });
+      } catch (error) {
+        console.error("❌ Error during shutdown:", error);
+        server.close(() => {
+          console.warn("Server closed (after DB error)");
+          process.exit(code);
+        });
+      }
+    }
   });
 }
 
 startServer().catch(console.error);
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (error) => {
-  console.error("❌ Uncaught Exception:", error);
-  process.exit(1);
-});
-
-process.on("unhandledRejection", (error) => {
-  console.error("❌ Unhandled Promise Rejection:", error);
-  process.exit(1);
-});
