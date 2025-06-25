@@ -11,9 +11,9 @@ const { AppError } = require("../utils/customErrors");
 async function validatePasswordIsCorrect(req, res, next) {
   console.log("\n⚠️  validatePasswordIsCorrect...");
   try {
-    const email = sanitizeEmail(req.user.email || req.body.email);
-    const user =
-      req?.user || (await User.findOne({ email: email }).select("+hash +salt"));
+    const email = sanitizeEmail(req?.body?.email || req?.user?.email);
+
+    const user = await User.findOne({ email: email }).select("+hash +salt");
 
     if (!user) {
       console.log("❌ User not found");
@@ -28,6 +28,10 @@ async function validatePasswordIsCorrect(req, res, next) {
       );
     }
 
+    if (!req?.user) {
+      req.user = user;
+    }
+
     const { password } = req.body;
     const { hash, salt } = user;
 
@@ -39,6 +43,7 @@ async function validatePasswordIsCorrect(req, res, next) {
         type: "UNAUTHORIZED",
       });
     }
+
     req.user.hash = "CENSORED by validatePasswordIsCorrect";
     req.user.salt = "CENSORED by validatePasswordIsCorrect";
 

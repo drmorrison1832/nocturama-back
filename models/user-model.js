@@ -14,21 +14,22 @@ const userSchema = new mongoose.Schema({
   hash: {
     type: String,
     required: true,
-    select: true,
+    select: false,
   },
   salt: {
     type: String,
     required: true,
-    select: true,
+    select: false,
   },
   token: {
     type: String,
   },
   tokenExpiresAt: {
     type: Date,
-    default: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
     select: true,
   },
+  passwordChangedAt: { type: Date, default: null, select: false },
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
   active: { type: Boolean, default: true },
 });
@@ -48,6 +49,9 @@ userSchema.pre("save", function (next) {
     // Set expiration time when new token is set
     this.tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   }
+  if (this.isModified("hash")) {
+    this.passwordChangedAt = new Date(Date.now());
+  }
   return next();
 });
 
@@ -55,9 +59,9 @@ userSchema.post("save", function () {
   console.log("User saved");
 });
 
-userSchema.post("save", async function (doc) {
-  // wasNewUser ? console.log("✅ User created") : console.log("✅ User updated");
-});
+// userSchema.post("save", async function (doc) {
+// wasNewUser ? console.log("✅ User created") : console.log("✅ User updated");
+// });
 
 const User = mongoose.model("User", userSchema);
 

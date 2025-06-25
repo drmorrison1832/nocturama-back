@@ -8,6 +8,8 @@ const express = require("express");
 // Import middleware
 const morgan = require("morgan");
 const helmet = require("helmet");
+
+// For later implementation
 const cors = require("cors");
 const corsOptions = {
   origin: process.env.CLIENT_URL || `http://localhost:${process.env.PORT}`,

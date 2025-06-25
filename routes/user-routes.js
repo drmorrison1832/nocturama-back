@@ -1,11 +1,10 @@
 // TO DO:
-// - log password changes (just the date)
 // - switch to JWT
 
 const router = require("express").Router();
 
 // Import custom errors class
-const { AppError, ValidationError } = require("../utils/customErrors");
+const { AppError } = require("../utils/customErrors");
 
 // Import and set up time express-rate-limit
 const rateLimit = require("express-rate-limit");
@@ -42,8 +41,8 @@ const { createSaltAndHash } = require("../utils/passwordEncryption");
 
 // const crypto = require("crypto");
 const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
-const SHA256 = require("crypto-js/sha256");
-const encBase64 = require("crypto-js/enc-base64");
+// const SHA256 = require("crypto-js/sha256");
+// const encBase64 = require("crypto-js/enc-base64");
 
 // Setup route
 router.use(limiter);
@@ -96,11 +95,10 @@ router.post(
   async (req, res, next) => {
     try {
       const { email } = req.body;
-
       const user = await User.findOne({ email }).select("+hash +salt");
 
       const newToken = randomUUID();
-      user.token = newToken; // Expiration date is updated through Schema pre("save") hook.
+      user.token = newToken;
       await user.save();
 
       return res.status(200).json({
@@ -122,9 +120,8 @@ router.post(
 router.post("/logout", validateToken, async (req, res, next) => {
   try {
     const user = req.user;
-
-    user.token = "";
-    user.tokenExpiresAt = "";
+    user.token = null;
+    user.tokenExpiresAt = null;
     await user.save();
 
     return res.status(200).json({
@@ -143,8 +140,8 @@ router.post(
   async (req, res, next) => {
     try {
       const user = req.user;
-
-      user.token = "";
+      user.token = null;
+      user.tokenExpiresAt = null;
       user.active = false;
       await user.save();
 
@@ -162,11 +159,13 @@ router.put(
   "/changepassword",
   validateToken,
   validateChangePasswordInput,
-  validateUserIsActive,
   validatePasswordIsCorrect,
+  validateUserIsActive,
   async (req, res, next) => {
     try {
-      const user = req.user;
+      const userID = req.user._id;
+      const user = await User.findById(userID).select("+hash +salt");
+
       const { newPassword } = req.body;
       const { hash, salt } = createSaltAndHash(newPassword);
       const token = randomUUID();
@@ -180,6 +179,7 @@ router.put(
       return res.status(200).json({
         status: "success",
         message: "User updated successfully",
+        details: "Token has been updated",
         data: {
           token: user.token,
         },

@@ -24,7 +24,7 @@ function handleJsonError(err, req, res, next) {
       return res.status(err.code).json(buildErrorResponse(err));
 
     default:
-      console.log("❌ Unkown error");
+      console.log("❌ Unknown error");
       return res.status(err.code || 500).json(buildErrorResponse(err));
   }
 }
