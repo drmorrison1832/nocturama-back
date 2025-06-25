@@ -1,10 +1,13 @@
 const mongoose = require("mongoose");
-// const User = require("../models/user-model");
 
 mongoose.Schema.Types.String.set("trim", true);
 
 const articleSchema = new mongoose.Schema({
-  title: { type: String, required: [true, "Title is required"], trim: true },
+  title: {
+    type: String,
+    required: [true, "Title is required"],
+    trim: true,
+  },
   author: { type: String, trim: true },
   description: {
     type: String,
@@ -20,16 +23,14 @@ const articleSchema = new mongoose.Schema({
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
-    // required: [true, "Owner is required"],
   },
 });
 
 let wasNewArticle;
 
-articleSchema.pre(/^find/, function (next) {
-  console.log("ACCESSING USER");
-  next();
-});
+// articleSchema.pre(/^find/, function (next) {
+//   next();
+// });
 
 articleSchema.pre("save", function (next) {
   wasNewArticle = this.isNew;

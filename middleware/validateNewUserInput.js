@@ -1,5 +1,5 @@
 const { ValidationError } = require("../utils/customErrors");
-const { isValidEmail, isValidPassword } = require("../utils/validators-index");
+const { isValidEmail } = require("../utils/validators-index");
 
 function validateNewUserInput(req, res, next) {
   console.log("\n⚠️  validateNewUserInput...");

@@ -27,7 +27,6 @@ const app = express();
 // Setup App
 app.use(
   morgan("dev", { immediate: false }),
-  morgan(":method :url :status :res[content-length] - :response-time ms"),
   helmet(),
   // cors(corsOptions),
   express.json({ limit: "150kb", verify: parseJSON }),
@@ -94,13 +93,13 @@ async function startServer() {
     });
 
     async function closeServer(code) {
-      console.info("Disconnecting from database");
+      console.info("Disconnecting from database...");
       try {
         await mongoose.disconnect();
-        console.info("Successfully disconnected from database...");
+        console.info("Successfully disconnected from database");
         console.info("Closing server...");
         server.close(() => {
-          console.warn("Server closed");
+          console.info("Server closed");
           process.exit(code);
         });
       } catch (error) {

@@ -1,7 +1,11 @@
+// TO DO:
+// - log password changes (just the date)
+// - switch to JWT
+
 const router = require("express").Router();
 
 // Import custom errors class
-const { AppError } = require("../utils/customErrors");
+const { AppError, ValidationError } = require("../utils/customErrors");
 
 // Import and set up time express-rate-limit
 const rateLimit = require("express-rate-limit");
@@ -26,16 +30,17 @@ const User = require("../models/user-model");
 const {
   validateLoginInput,
   validateNewUserInput,
+  validateChangePasswordInput,
   validatePasswordIsCorrect,
   validateToken,
-  validateUserExists,
   validateUserIsActive,
 } = require("../middleware/middlewareValidators-index");
 
-// const validatePasswordIsCorrect = require("../utils/validatePasswordIsCorrect");
-
 // Import utils
 const sanitizeEmail = require("../utils/sanitizeEmail");
+const { createSaltAndHash } = require("../utils/passwordEncryption");
+
+// const crypto = require("crypto");
 const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
 const SHA256 = require("crypto-js/sha256");
 const encBase64 = require("crypto-js/enc-base64");
@@ -43,12 +48,11 @@ const encBase64 = require("crypto-js/enc-base64");
 // Setup route
 router.use(limiter);
 
-router.post("/signup", validateNewUserInput, async (req, res, next) => {
+// Routes
+router.post("/register", validateNewUserInput, async (req, res, next) => {
   try {
     const { email, password } = req.body;
-
-    const salt = randomUUID();
-    const hash = SHA256(password + salt).toString(encBase64);
+    const { hash, salt } = createSaltAndHash(password);
     const token = randomUUID();
 
     const newUser = await User.create({
@@ -87,7 +91,6 @@ router.post("/signup", validateNewUserInput, async (req, res, next) => {
 router.post(
   "/login",
   validateLoginInput,
-  validateUserExists,
   validatePasswordIsCorrect,
   validateUserIsActive,
   async (req, res, next) => {
@@ -97,7 +100,7 @@ router.post(
       const user = await User.findOne({ email }).select("+hash +salt");
 
       const newToken = randomUUID();
-      user.token = newToken;
+      user.token = newToken; // Expiration date is updated through Schema pre("save") hook.
       await user.save();
 
       return res.status(200).json({
@@ -120,20 +123,9 @@ router.post("/logout", validateToken, async (req, res, next) => {
   try {
     const user = req.user;
 
-    if (!user) {
-      return next(
-        new AppError({
-          name: "NotFoundError",
-          message: `User not found`,
-          type: "NotFoundError",
-          code: 404,
-        })
-      );
-    }
-
     user.token = "";
-    user.active = false;
-    user.save();
+    user.tokenExpiresAt = "";
+    await user.save();
 
     return res.status(200).json({
       status: "success",
@@ -152,24 +144,45 @@ router.post(
     try {
       const user = req.user;
 
-      if (!user) {
-        return next(
-          new AppError({
-            name: "NotFoundError",
-            message: `User not found`,
-            type: "NotFoundError",
-            code: 404,
-          })
-        );
-      }
-
       user.token = "";
       user.active = false;
-      user.save();
+      await user.save();
 
       return res.status(200).json({
         status: "success",
         message: "User account has been disconnected and disabled",
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+);
+
+router.put(
+  "/changepassword",
+  validateToken,
+  validateChangePasswordInput,
+  validateUserIsActive,
+  validatePasswordIsCorrect,
+  async (req, res, next) => {
+    try {
+      const user = req.user;
+      const { newPassword } = req.body;
+      const { hash, salt } = createSaltAndHash(newPassword);
+      const token = randomUUID();
+
+      user.hash = hash;
+      user.salt = salt;
+      user.token = token;
+
+      await user.save();
+
+      return res.status(200).json({
+        status: "success",
+        message: "User updated successfully",
+        data: {
+          token: user.token,
+        },
       });
     } catch (error) {
       return next(error);

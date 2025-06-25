@@ -37,7 +37,7 @@ function buildErrorResponse(error) {
     message:
       error.message ||
       "The server was unable to complete your request. Please try again later.",
-    details: error.details || null,
+    details: error.details || undefined,
   };
 }
 

@@ -1,30 +1,52 @@
-const SHA256 = require("crypto-js/sha256");
-const encBase64 = require("crypto-js/enc-base64");
+const sanitizeEmail = require("../utils/sanitizeEmail");
+const User = require("../models/user-model");
+
+// const SHA256 = require("crypto-js/sha256");
+// const encBase64 = require("crypto-js/enc-base64");
+
+const { verifyPassword } = require("../utils/passwordEncryption");
 
 const { AppError } = require("../utils/customErrors");
 
-function validatePasswordIsCorrect(req, res, next) {
+async function validatePasswordIsCorrect(req, res, next) {
   console.log("\n⚠️  validatePasswordIsCorrect...");
+  try {
+    const email = sanitizeEmail(req.user.email || req.body.email);
+    const user =
+      req?.user || (await User.findOne({ email: email }).select("+hash +salt"));
 
-  const { password } = req.body;
-  const { hash, salt } = req.user;
+    if (!user) {
+      console.log("❌ User not found");
+      return next(
+        new AppError({
+          message: "Wrong email or password",
+          name: "UnauthorizedError",
+          code: 401,
+          type: "UNAUTHORIZED",
+          details: null,
+        })
+      );
+    }
 
-  if (SHA256(password + salt).toString(encBase64) !== hash) {
-    throw new AppError({
-      message: "Wrong email or password",
-      name: "UnauthorizedError",
-      code: 401,
-      type: "UNAUTHORIZED",
-    });
+    const { password } = req.body;
+    const { hash, salt } = user;
+
+    if (!verifyPassword(hash, salt, password)) {
+      throw new AppError({
+        message: "Wrong email or password",
+        name: "UnauthorizedError",
+        code: 401,
+        type: "UNAUTHORIZED",
+      });
+    }
+    req.user.hash = "CENSORED by validatePasswordIsCorrect";
+    req.user.salt = "CENSORED by validatePasswordIsCorrect";
+
+    console.log("✅ validatePasswordIsCorrect");
+    return next();
+  } catch (error) {
+    return next(error);
   }
-  // req.user.hash = "CENSORED by validatePasswordIsCorrect";
-  // req.user.salt = "CENSORED by validatePasswordIsCorrect";
-
-  req.user.hash = false;
-  req.user.salt = false;
-
-  console.log("✅ validatePasswordIsCorrect");
-  next();
 }
 
 module.exports = validatePasswordIsCorrect;

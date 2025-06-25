@@ -5,9 +5,8 @@ async function validateToken(req, res, next) {
   console.log("\n⚠️  validateToken...");
 
   try {
-    const token = req?.headers?.authorization?.slice(7);
-
-    if (!token) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       console.log("❌ No token provided");
       return next(
         new AppError({
@@ -19,19 +18,36 @@ async function validateToken(req, res, next) {
       );
     }
 
+    const token = authHeader.split(" ")[1];
     const user = await User.findOne({ token });
 
     if (!user) {
       console.log("❌ User not found");
       return next(
         new AppError({
-          message: "Invalid token",
+          message: "User not recognized",
           name: "UnauthorizedError",
           code: 401,
           type: "UNAUTHORIZED",
         })
       );
     }
+
+    if (new Date(Date.now()) > user.tokenExpiresAt) {
+      console.log("❌ Token expired");
+      return next(
+        new AppError({
+          message: "Token expired",
+          name: "UnauthorizedError",
+          code: 401,
+          type: "UNAUTHORIZED",
+        })
+      );
+    }
+
+    // Slides expiration
+    user.tokenExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
 
     req.user = user;
 
