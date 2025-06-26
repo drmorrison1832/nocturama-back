@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema({
   tokenExpiresAt: {
     type: Date,
     default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
-    select: true,
+    select: false,
   },
   passwordChangedAt: { type: Date, default: null, select: false },
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],

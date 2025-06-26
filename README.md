@@ -1,5 +1,8 @@
 # Nocturama Backend
 
+_Readme created with using GitHub Copilot._
+_Must be reviewed._
+
 **Nocturama** is the backend for a bookstore’s website, featuring a blog where the bookstore owners share and discuss selected books.  
 This project is developed ad honorem for the bookstore, with a React frontend (work in progress).
 

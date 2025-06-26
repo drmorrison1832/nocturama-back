@@ -1,3 +1,7 @@
+console.error(
+  "To do: - verify token expiration date is working (it was selected: true,\n and now it's selected: false"
+);
+
 console.warn("\n🏁 Starting app");
 require("dotenv").config();
 const PORT = process.env.PORT || 3000;
@@ -36,8 +40,9 @@ app.use(
   // showReq
 );
 
-app.use("/api/articles", require("./routes/article-routes"));
 app.use("/api/auth", require("./routes/user-routes"));
+app.use("/api/articles", require("./routes/article-routes"));
+// app.use("/api/tags", require("./routes/tag-routes"));
 
 app.use(handleError);
 

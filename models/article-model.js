@@ -19,7 +19,8 @@ const articleSchema = new mongoose.Schema({
   created: { type: Date, default: () => Date.now() },
   updated: [Date],
   show: { type: Boolean, default: true },
-  tags: [{ type: String, lowercase: true, trim: true }],
+  // tags: [{ type: String, lowercase: true, trim: true }],
+  // tags: [{ type: mongoose.Schema.Types.ObjectId, ref: "Tag" }],
   owner: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",

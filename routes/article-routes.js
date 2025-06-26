@@ -5,8 +5,8 @@ const { AppError } = require("../utils/customErrors");
 // Import and set up time express-rate-limit
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
-  windowMs: 3 * 60 * 1000,
-  limit: 3,
+  windowMs: 1 * 60 * 1000,
+  limit: 20,
   handler: (req, res, next, options) =>
     next(
       new AppError({
@@ -21,6 +21,7 @@ const limiter = rateLimit({
 // Import models
 const Article = require("../models/article-model");
 const User = require("../models/user-model");
+// const Tag = require("../models/tag-model");
 
 // Import custom middleware
 const {
@@ -59,7 +60,7 @@ const KEYS_TO_COMPARE = [
   "description",
   "link",
   "show",
-  "tags",
+  // "tags",
 ];
 
 // Setup app
@@ -74,8 +75,9 @@ router.post(
   async (req, res, next) => {
     try {
       const newArticle = req.newArticle;
-
-      const response = await newArticle.save();
+      const savedArticle = await newArticle.save();
+      const response = await savedArticle;
+      // .populate("tags");
 
       await User.findByIdAndUpdate(
         req.user._id,
