@@ -34,6 +34,7 @@ const {
   validateToken,
   validateUserIsActive,
 } = require("../middleware/middlewareValidators-index");
+const requireRole = require("../middleware/requireRole");
 
 // Import utils
 const sanitizeEmail = require("../utils/sanitizeEmail");
@@ -41,6 +42,7 @@ const { createSaltAndHash } = require("../utils/passwordEncryption");
 
 // const crypto = require("crypto");
 const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = require("uuid");
+
 // const SHA256 = require("crypto-js/sha256");
 // const encBase64 = require("crypto-js/enc-base64");
 
@@ -48,44 +50,50 @@ const { randomUUID } = require("crypto"); // instead of const { v4: uuidv4 } = r
 router.use(limiter);
 
 // Routes
-router.post("/register", validateNewUserInput, async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const { hash, salt } = createSaltAndHash(password);
-    const token = randomUUID();
+router.post(
+  "/register",
+  validateNewUserInput,
+  validateToken,
+  requireRole("admin"),
+  async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+      const { hash, salt } = createSaltAndHash(password);
+      const token = randomUUID();
 
-    const newUser = await User.create({
-      email: sanitizeEmail(email),
-      salt,
-      hash,
-      token,
-    });
+      const newUser = await User.create({
+        email: sanitizeEmail(email),
+        salt,
+        hash,
+        token,
+      });
 
-    return res.status(201).json({
-      status: "success",
-      message: "User created successfully",
-      data: {
-        email: newUser.email,
-        id: newUser._id,
-        token: newUser.token,
-        articles: newUser.articles,
-      },
-    });
-  } catch (error) {
-    if (error.code === 11000) {
-      return next(
-        new AppError({
-          name: "DuplicateKeyError",
-          message: `User already registered`,
-          type: "DUPLICATE_KEY",
-          code: 409,
-        })
-      );
+      return res.status(201).json({
+        status: "success",
+        message: "User created successfully",
+        data: {
+          email: newUser.email,
+          id: newUser._id,
+          token: newUser.token,
+          articles: newUser.articles,
+        },
+      });
+    } catch (error) {
+      if (error.code === 11000) {
+        return next(
+          new AppError({
+            name: "DuplicateKeyError",
+            message: `User already registered`,
+            type: "DUPLICATE_KEY",
+            code: 409,
+          })
+        );
+      }
+
+      return next(error);
     }
-
-    return next(error);
   }
-});
+);
 
 router.post(
   "/login",

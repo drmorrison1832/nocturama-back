@@ -32,6 +32,13 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: { type: Date, default: null, select: false },
   articles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
   active: { type: Boolean, default: true },
+
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user",
+    required: true,
+  },
 });
 
 userSchema.pre(/^find/, function (next) {

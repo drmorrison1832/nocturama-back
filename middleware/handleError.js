@@ -8,7 +8,7 @@ function handleJsonError(err, req, res, next) {
 
   switch (err.name) {
     case "ValidationError": // from validateEntry.js
-    case "ForbiddenError": // from validateIsOwner.js
+    case "ForbiddenError": // from validateIsOwner.js or requireRole.js
     case "UnauthorizedError": // from validateAuthorization.js
     case "CastError": // from validateID.js
     case "NotFoundError": // from validateResourceExists.js

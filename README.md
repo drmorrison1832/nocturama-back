@@ -76,7 +76,6 @@ It manages user authentication, article creation and management, and enforces se
    Example:
 
    ```
-   NODE_LOCAL=true
    PORT=3200
    MONGODB_URI_LOCAL=mongodb://localhost:27017/nocturama
    JWT_SECRET=your_jwt_secret
