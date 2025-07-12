@@ -144,6 +144,7 @@ router.post("/logout", validateToken, async (req, res, next) => {
 router.post(
   "/disable",
   validateToken,
+  requireRole("admin"),
   validateUserIsActive,
   async (req, res, next) => {
     try {
