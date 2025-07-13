@@ -1,9 +1,9 @@
 console.error(
   `To do:
-  - verify token expiration date is working (it was selected: true,
-  and now it's selected: false
-  - implement role validation (admin) on user disable --> disable route must use param /:id
-  ---> validateUserIsActive must read :id param too.
+  - VERIFY user "/disable/:id" route works (I modified it but didn't tried it yet)
+  - verify token expiration date is working (it was "selected: true",
+  and now it's "selected: false"
+  - crete root user
   `
 );
 

@@ -1,20 +1,20 @@
 # Nocturama Backend
 
-_Readme created with using GitHub Copilot._
-_Must be reviewed._
+_This readme was created by GitHub Copilot and needs to be reviewed._
 
-**Nocturama** is the backend for a bookstore’s website, featuring a blog where the bookstore owners share and discuss selected books.  
-This project is developed ad honorem for the bookstore, with a React frontend (work in progress).
+**Nocturama-back** is my first attemp of a fully functionnal backend for a bookstore’s website featuring an agenda.
+This backend aims tp manage user accounts and articles.
+It is developed _ad honorem_ and still is work in progress.
+A backoffice must be build (I currently access the API using Postman), and many things are are still to finish or to improve (for example, the database schemas and collections must be costomized)..
+It's React frontend is also work in progress.
 
 ---
 
 ## Table of Contents
 
-- [Project Overview](#project-overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
   - [User Routes](#user-routes)
   - [Article Routes](#article-routes)
@@ -25,22 +25,16 @@ This project is developed ad honorem for the bookstore, with a React frontend (w
 
 ---
 
-## Project Overview
-
-This backend powers the Nocturama bookstore website and blog.  
-It manages user authentication, article creation and management, and enforces security and validation best practices.
-
----
-
 ## Features
 
-- User registration, login, logout, and password change
+- User registration, login, logout, desactivation and password change
 - Token-based authentication (with plans to migrate to JWT)
 - Article CRUD (create, read, update, delete)
 - Article search, filtering, sorting, and pagination
 - Input validation and sanitization
 - Rate limiting for security
 - Owner/admin logic for article editing (admin features planned)
+- User permissions (user, admin, root)
 - Robust error handling and logging
 
 ---
@@ -50,10 +44,10 @@ It manages user authentication, article creation and management, and enforces se
 - **Node.js** & **Express.js**
 - **MongoDB** & **Mongoose**
 - **express-validator** for input validation
+- **validator** for email and string sanitization
 - **crypto** for password hashing
 - **express-rate-limit** for rate limiting
 - **helmet** for security headers
-- **validator** for email and string sanitization
 
 ---
 
@@ -62,7 +56,7 @@ It manages user authentication, article creation and management, and enforces se
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/yourusername/nocturama-back.git
+   git clone https://github.com/drmorrison1832/nocturama-back.git
    cd nocturama-back
    ```
 
@@ -73,30 +67,23 @@ It manages user authentication, article creation and management, and enforces se
    ```
 
 3. **Set up your `.env` file:**  
-   Example:
+    Example:
 
    ```
-   PORT=3200
+   # needed
    MONGODB_URI_LOCAL=mongodb://localhost:27017/nocturama
+   # optional
+   NODE_LOCAL=true
+   PORT=3200
+   # not implemented yet
    JWT_SECRET=your_jwt_secret
    JWT_EXPIRES_IN=1h
    ```
 
 4. **Start the server:**
    ```sh
-   npm start
+   npm run dev
    ```
-
----
-
-## Environment Variables
-
-| Variable            | Description                         | Example                               |
-| ------------------- | ----------------------------------- | ------------------------------------- |
-| `PORT`              | Port to run the server on           | `3200`                                |
-| `MONGODB_URI_LOCAL` | Local MongoDB connection string     | `mongodb://localhost:27017/nocturama` |
-| `JWT_SECRET`        | Secret for JWT signing (future use) | `your_jwt_secret`                     |
-| `JWT_EXPIRES_IN`    | JWT expiration (future use)         | `1h`                                  |
 
 ---
 
@@ -106,10 +93,10 @@ It manages user authentication, article creation and management, and enforces se
 
 | Method | Endpoint          | Description               | Auth Required |
 | ------ | ----------------- | ------------------------- | ------------- |
-| POST   | `/register`       | Register a new user       | No            |
+| POST   | `/register`       | Register a new user       | Yes (admin)   |
 | POST   | `/login`          | Login and receive a token | No            |
 | POST   | `/logout`         | Logout (invalidate token) | Yes           |
-| POST   | `/disable`        | Disable user account      | Yes           |
+| POST   | `/disable`        | Disable user account      | Yes (admin)   |
 | PUT    | `/changepassword` | Change user password      | Yes           |
 
 ### Article Routes
@@ -134,7 +121,7 @@ It manages user authentication, article creation and management, and enforces se
 
 - **Passwords** are hashed with PBKDF2 and a unique salt per user.
 - **Email** is validated and sanitized.
-- **Rate limiting** is applied to sensitive routes.
+- **Rate limiting** is applied to all routes.
 - **Input validation** is enforced for all user and article data.
 - **Token expiration** and sliding expiration are implemented.
 - **Sensitive fields** (like password hash and salt) are never exposed in API responses.

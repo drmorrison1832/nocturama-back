@@ -1,6 +1,3 @@
-// TO DO:
-// - switch to JWT
-
 const router = require("express").Router();
 
 // Import custom errors class
@@ -142,13 +139,12 @@ router.post("/logout", validateToken, async (req, res, next) => {
 });
 
 router.post(
-  "/disable",
+  "/disable/:id",
   validateToken,
   requireRole("admin"),
-  validateUserIsActive,
   async (req, res, next) => {
     try {
-      const user = req.user;
+      const user = await User.findById(req.params.id);
       user.token = null;
       user.tokenExpiresAt = null;
       user.active = false;
